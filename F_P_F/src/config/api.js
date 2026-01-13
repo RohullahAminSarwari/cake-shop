@@ -10,7 +10,8 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Important for Laravel Sanctum/CSRF
+  // Remove withCredentials since we're using Bearer token authentication
+  // withCredentials: true, // Only needed for cookie-based auth
 });
 
 // Request interceptor - add auth token if available
@@ -34,11 +35,14 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized - clear token and redirect to login
       localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
 );
 
 export default api;
-

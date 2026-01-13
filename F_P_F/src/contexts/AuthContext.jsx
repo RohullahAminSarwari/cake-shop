@@ -23,13 +23,28 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      if (token) {
-        const response = await api.get('/user');
-        setUser(response.data);
-        setIsAuthenticated(true);
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        } catch (parseError) {
+          // If JSON parse fails, clear storage
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
+      console.error('Error checking auth:', error);
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -39,20 +54,23 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      // Get CSRF cookie first if using Sanctum
-      await api.get('/sanctum/csrf-cookie', { baseURL: import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:8000' });
-      
       const response = await api.post('/login', credentials);
-      if (response.data.token) {
+      if (response.data.token && response.data.user) {
         localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        return { success: true, data: response.data };
+      } else {
+        return { 
+          success: false, 
+          error: 'Invalid response from server' 
+        };
       }
-      setUser(response.data.user || response.data);
-      setIsAuthenticated(true);
-      return { success: true, data: response.data };
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Login failed' 
+        error: error.response?.data?.message || error.response?.data?.error || 'Login failed' 
       };
     }
   };
@@ -60,11 +78,25 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await api.post('/register', userData);
-      return { success: true, data: response.data };
+      if (response.data.token && response.data.user) {
+        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        return { success: true, data: response.data };
+      } else {
+        return { 
+          success: false, 
+          error: 'Invalid response from server' 
+        };
+      }
     } catch (error) {
+      const errorMessage = error.response?.data?.message 
+        || (error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : null)
+        || 'Registration failed';
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Registration failed' 
+        error: errorMessage
       };
     }
   };
@@ -76,13 +108,14 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
       setUser(null);
       setIsAuthenticated(false);
     }
   };
 
   const isAdmin = () => {
-    return user?.role === 'admin' || user?.is_admin === true;
+    return user?.role === 'admin';
   };
 
   const value = {
@@ -98,4 +131,3 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-

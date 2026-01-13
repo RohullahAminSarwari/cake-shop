@@ -2,121 +2,113 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setError('');
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const result = await login(formData);
-
+    const result = await login({ email, password });
+    
     if (result.success) {
-      navigate('/dashboard');
+      navigate('/');
     } else {
-      setError(result.error || 'Login failed. Please try again.');
+      setError(result.error || 'Login failed');
     }
-
+    
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/register"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              create a new account
-            </Link>
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-rose-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🎂</div>
+          <h2 className="text-4xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+          <p className="text-gray-600">Sign in to your account</p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
+
+        <div className="card p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-field"
+                placeholder="you@example.com"
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
               <input
                 id="password"
-                name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field"
+                placeholder="••••••••"
               />
             </div>
-          </div>
 
-          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember"
+                  type="checkbox"
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+                  Remember me
+                </label>
+              </div>
+              <Link to="#" className="text-sm text-pink-600 hover:text-pink-700">
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
-          </div>
+          </form>
 
-          <div className="text-center">
-            <Link
-              to="/"
-              className="text-sm text-blue-600 hover:text-blue-500"
-            >
-              ← Back to home
-            </Link>
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-pink-600 hover:text-pink-700 font-semibold">
+                Sign up
+              </Link>
+            </p>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}
 

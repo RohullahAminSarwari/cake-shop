@@ -1,120 +1,134 @@
-# Cake Shop Digitalization - React Frontend
+# Cake Shop Frontend
 
-This is a React.js application with Tailwind CSS, configured to work with a Laravel backend.
+A beautiful and modern React frontend for the Cake Shop Digitalization project.
 
 ## Features
 
-- ⚛️ React 18
-- 🎨 Tailwind CSS 3
-- ⚡ Vite (fast build tool)
-- 🔌 Laravel API integration ready
-- 📦 Axios for API calls
-- 🛣️ React Router DOM
+### Customer Features
+- 🏠 Beautiful homepage with hero section and featured products
+- 🎂 Product catalog with search and category filtering
+- 📦 Product detail pages with image galleries
+- 🛒 Shopping cart with quantity management
+- 💳 Checkout page with order summary
+- 📋 Order history and tracking
+- 🔐 User authentication (Login/Register)
 
-## Installation
+### Admin Features
+- 📊 Dashboard with statistics and recent orders
+- 🎂 Product management (Create, Read, Update, Delete)
+- 📦 Order management with status updates
+- 👥 User management
+- 🔒 Protected admin routes
+
+## Tech Stack
+
+- **React 18** - UI library
+- **React Router** - Routing
+- **Tailwind CSS** - Styling
+- **Axios** - HTTP client
+- **Vite** - Build tool
+
+## Getting Started
 
 1. Install dependencies:
 ```bash
 npm install
 ```
 
-## Development
+2. Configure API endpoint:
+Create a `.env` file in the root directory:
+```
+VITE_API_BASE_URL=http://localhost:8000/api
+```
 
-Start the development server:
+3. Start development server:
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
-
-## Building for Production
-
-Build the production bundle:
+4. Build for production:
 ```bash
 npm run build
 ```
 
-Preview the production build:
-```bash
-npm run preview
-```
+## Backend Integration
 
-## Laravel Integration
+This frontend is designed to work with the Laravel backend API. Make sure your backend has the following endpoints:
 
-### API Configuration
+### Authentication
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
+- `POST /api/logout` - User logout (protected)
 
-1. Create a `.env` file from `.env.example`:
-```bash
-cp .env.example .env
-```
+### Products (Public)
+- `GET /api/products` - List all products
+- `GET /api/products/:id` - Get product details
 
-2. Update the `VITE_API_BASE_URL` in `.env` to match your Laravel backend URL.
+### Cart (Protected)
+- `GET /api/cart` - Get cart items
+- `POST /api/cart/add` - Add item to cart
+- `PUT /api/cart/items/:id` - Update cart item quantity
+- `DELETE /api/cart/items/:id` - Remove item from cart
 
-### Laravel Backend Setup
+### Orders (Protected)
+- `GET /api/orders` - Get user orders
+- `POST /api/orders` - Create new order
 
-Make sure your Laravel backend has:
-
-1. **CORS Configuration** - Update `config/cors.php`:
-```php
-'paths' => ['api/*', 'sanctum/csrf-cookie'],
-'allowed_origins' => ['http://localhost:3000'],
-'allowed_methods' => ['*'],
-'allowed_headers' => ['*'],
-'supports_credentials' => true,
-```
-
-2. **API Routes** - Your Laravel routes should be prefixed with `/api`
-
-3. **Sanctum (Optional)** - If using Laravel Sanctum for authentication:
-   - Install Sanctum: `composer require laravel/sanctum`
-   - Publish config: `php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"`
-   - Update `config/sanctum.php` to allow your frontend domain
-
-### Using the API Service
-
-Import and use the API service in your components:
-
-```javascript
-import { apiService } from './services/apiService';
-
-// Example usage
-const fetchCakes = async () => {
-  try {
-    const cakes = await apiService.getCakes();
-    console.log(cakes);
-  } catch (error) {
-    console.error('Error fetching cakes:', error);
-  }
-};
-```
+### Admin Endpoints (Admin Only)
+- `GET /api/admin/products` - List all products
+- `POST /api/admin/products` - Create product
+- `PUT /api/admin/products/:id` - Update product
+- `DELETE /api/admin/products/:id` - Delete product
+- `GET /api/admin/orders` - List all orders
+- `PUT /api/admin/orders/:id` - Update order status
+- `GET /api/admin/users` - List all users
+- `POST /api/admin/users` - Create user
+- `PUT /api/admin/users/:id` - Update user
+- `DELETE /api/admin/users/:id` - Delete user
+- `GET /api/admin/dashboard/stats` - Get dashboard statistics
 
 ## Project Structure
 
 ```
-├── src/
-│   ├── config/
-│   │   └── api.js          # Axios configuration
-│   ├── services/
-│   │   └── apiService.js    # API service functions
-│   ├── App.jsx             # Main App component
-│   ├── App.css             # App styles
-│   ├── main.jsx            # Entry point
-│   └── index.css           # Global styles with Tailwind
-├── index.html              # HTML template
-├── vite.config.js          # Vite configuration
-├── tailwind.config.js      # Tailwind CSS configuration
-├── postcss.config.js       # PostCSS configuration
-└── package.json            # Dependencies
+src/
+├── components/        # Reusable components
+│   ├── Layout.jsx    # Main layout wrapper
+│   ├── NavBar.jsx    # Navigation bar
+│   └── ProtectedRoute.jsx  # Route protection
+├── contexts/         # React contexts
+│   └── AuthContext.jsx  # Authentication context
+├── pages/            # Page components
+│   ├── Home.jsx      # Homepage
+│   ├── Products.jsx  # Product catalog
+│   ├── ProductDetail.jsx  # Product detail page
+│   ├── Cart.jsx      # Shopping cart
+│   ├── Checkout.jsx  # Checkout page
+│   ├── Orders.jsx    # User orders
+│   ├── Auth/         # Authentication pages
+│   │   ├── Login.jsx
+│   │   └── Register.jsx
+│   └── Admin/        # Admin pages
+│       ├── Dashboard.jsx
+│       ├── Products.jsx
+│       ├── Orders.jsx
+│       └── Users.jsx
+├── config/           # Configuration
+│   └── api.js        # API client setup
+├── App.jsx           # Main app component
+└── main.jsx          # Entry point
 ```
 
-## Development Proxy
+## Design Features
 
-The Vite dev server is configured to proxy `/api` requests to `http://localhost:8000` (your Laravel backend). This means:
+- 🎨 Modern, clean design with pink/rose color scheme
+- 📱 Fully responsive (mobile, tablet, desktop)
+- ⚡ Fast and smooth animations
+- 🎯 User-friendly interface
+- ♿ Accessible components
 
-- Frontend: `http://localhost:3000`
-- API calls to `/api/*` will be proxied to `http://localhost:8000/api/*`
+## Notes
 
-## License
-
-MIT
-
+- The frontend expects the backend API to return data in JSON format
+- Authentication tokens are stored in localStorage
+- All admin routes are protected and require admin role
+- The UI is fully functional but requires backend API implementation for data persistence

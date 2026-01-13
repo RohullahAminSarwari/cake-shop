@@ -1,13 +1,13 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
       </div>
     );
   }
@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (requireAdmin && !isAdmin()) {
+  if (adminOnly && !isAdmin()) {
     return <Navigate to="/" replace />;
   }
 
@@ -24,4 +24,3 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 };
 
 export default ProtectedRoute;
-
