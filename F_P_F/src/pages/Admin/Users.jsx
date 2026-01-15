@@ -20,9 +20,10 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // This will need a users endpoint in your backend
-      // const response = await api.get('/admin/users');
-      // setUsers(response.data);
+      const response = await api.get('/admin/users');
+      // Handle different response formats
+      const usersData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setUsers(usersData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -34,9 +35,9 @@ export default function AdminUsers() {
     e.preventDefault();
     try {
       if (editingUser) {
-        // await api.put(`/admin/users/${editingUser.id}`, formData);
+        await api.put(`/admin/users/${editingUser.id}`, formData);
       } else {
-        // await api.post('/admin/users', formData);
+        await api.post('/admin/users', formData);
       }
       setShowModal(false);
       setEditingUser(null);
@@ -63,7 +64,7 @@ export default function AdminUsers() {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      // await api.delete(`/admin/users/${id}`);
+      await api.delete(`/admin/users/${id}`);
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);

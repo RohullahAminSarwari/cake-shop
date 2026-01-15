@@ -15,9 +15,10 @@ export default function Cart() {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      // This will need a cart endpoint in your backend
-      // const response = await api.get('/cart');
-      // setCartItems(response.data.items || []);
+      const response = await api.get('/cart');
+      // Handle different response formats for cart
+      const cartData = response.data?.data || response.data || {};
+      setCartItems(cartData.items || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -33,8 +34,7 @@ export default function Cart() {
 
     try {
       setUpdating(itemId);
-      // This will need a cart update endpoint in your backend
-      // await api.put(`/cart/items/${itemId}`, { quantity });
+      await api.put(`/cart/items/${itemId}`, { quantity });
       await fetchCart();
       setUpdating(null);
     } catch (error) {
@@ -46,8 +46,7 @@ export default function Cart() {
   const removeItem = async (itemId) => {
     try {
       setUpdating(itemId);
-      // This will need a cart remove endpoint in your backend
-      // await api.delete(`/cart/items/${itemId}`);
+      await api.delete(`/cart/items/${itemId}`);
       await fetchCart();
       setUpdating(null);
     } catch (error) {

@@ -18,10 +18,14 @@ export default function Products() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      // This will need a products endpoint in your backend
-      // const params = selectedCategory !== 'all' ? { category_id: selectedCategory } : {};
-      // const response = await api.get('/products', { params });
-      // setProducts(response.data);
+      const params = {};
+      if (selectedCategory !== 'all') {
+        params.category_id = selectedCategory;
+      }
+      const response = await api.get('/products', { params });
+      // Handle different response formats - check if data is in response.data.data or response.data
+      const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setProducts(productsData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -31,15 +35,16 @@ export default function Products() {
 
   const fetchCategories = async () => {
     try {
-      // This will need a categories endpoint in your backend
-      // const response = await api.get('/categories');
-      // setCategories(response.data);
+      const response = await api.get('/categories');
+      // Handle different response formats for categories
+      const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
 
-  const filteredProducts = products.filter(product =>
+  const filteredProducts = (Array.isArray(products) ? products : []).filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );

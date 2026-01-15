@@ -19,9 +19,10 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      // This will need a dashboard stats endpoint in your backend
-      // const response = await api.get('/admin/dashboard/stats');
-      // setStats(response.data);
+      const response = await api.get('/admin/dashboard/stats');
+      // Handle different response formats
+      const statsData = response.data?.data || response.data || {};
+      setStats(statsData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -31,9 +32,10 @@ export default function AdminDashboard() {
 
   const fetchRecentOrders = async () => {
     try {
-      // This will need a recent orders endpoint in your backend
-      // const response = await api.get('/admin/orders?limit=5');
-      // setRecentOrders(response.data);
+      const response = await api.get('/admin/orders?limit=5');
+      // Handle different response formats
+      const ordersData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setRecentOrders(ordersData);
     } catch (error) {
       console.error('Error fetching recent orders:', error);
     }

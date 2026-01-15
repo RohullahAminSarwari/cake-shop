@@ -20,15 +20,17 @@ export default function ProductDetail() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      // This will need a product detail endpoint in your backend
-      // const response = await api.get(`/products/${id}`);
-      // setProduct(response.data);
+      const response = await api.get(`/products/${id}`);
+      // Handle different response formats for single product
+      const productData = response.data?.data || response.data || null;
+      setProduct(productData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching product:', error);
       setLoading(false);
     }
   };
+
 
   const addToCart = async () => {
     if (!isAuthenticated) {
@@ -38,9 +40,7 @@ export default function ProductDetail() {
 
     try {
       setAddingToCart(true);
-      // This will need a cart endpoint in your backend
-      // await api.post('/cart/add', { product_id: id, quantity });
-      alert('Product added to cart!');
+      await api.post('/cart/add', { product_id: id, quantity });
       setAddingToCart(false);
     } catch (error) {
       console.error('Error adding to cart:', error);

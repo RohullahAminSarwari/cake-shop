@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../config/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminProducts() {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -15,18 +19,21 @@ export default function AdminProducts() {
     stock: '',
     category_id: '',
     status: 'active',
+    image: null,
   });
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      // This will need a products endpoint in your backend
-      // const response = await api.get('/admin/products');
-      // setProducts(response.data);
+      const response = await api.get('/admin/products');
+      // Handle different response formats
+      const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setProducts(productsData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -34,13 +41,50 @@ export default function AdminProducts() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await api.get('/categories');
+      // Handle different response formats
+      const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Prepare form data
+      const productData = new FormData();
+      productData.append('name', formData.name);
+      productData.append('description', formData.description);
+      productData.append('price', parseFloat(formData.price));
+      productData.append('discount_price', formData.discount_price ? parseFloat(formData.discount_price) : '');
+      productData.append('stock', parseInt(formData.stock));
+      productData.append('category_id', formData.category_id);
+      productData.append('status', formData.status);
+      // Add shop_id with a default value since it's still required in the DB
+      productData.append('shop_id', 1); // Default to first shop
+      
+      // Append image if provided
+      if (formData.image) {
+        productData.append('image', formData.image);
+      }
+      
       if (editingProduct) {
-        // await api.put(`/admin/products/${editingProduct.id}`, formData);
+        // For PUT request, send as multipart form data
+        // Don't set Content-Type header manually as it will include boundary information
+        await api.put(`/admin/products/${editingProduct.id}`, productData);
+        alert('Product updated successfully!');
       } else {
-        // await api.post('/admin/products', formData);
+        // For POST request, send as multipart form data
+        // Don't set Content-Type header manually as it will include boundary information
+        await api.post('/admin/products', productData);
+        alert('Product created successfully!');
       }
       setShowModal(false);
       setEditingProduct(null);
@@ -48,7 +92,8 @@ export default function AdminProducts() {
       fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Failed to save product');
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to save product';
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -60,8 +105,9 @@ export default function AdminProducts() {
       price: product.price || '',
       discount_price: product.discount_price || '',
       stock: product.stock || '',
-      category_id: product.category_id || '',
+      category_id: product.category_id || product.category?.id || '',
       status: product.status || 'active',
+      image: null, // Don't pre-fill image field when editing
     });
     setShowModal(true);
   };
@@ -70,7 +116,7 @@ export default function AdminProducts() {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      // await api.delete(`/admin/products/${id}`);
+      await api.delete(`/admin/products/${id}`);
       fetchProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -274,6 +320,7 @@ export default function AdminProducts() {
                   <input
                     type="number"
                     required
+                    min="0"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                     className="input-field"
@@ -290,6 +337,42 @@ export default function AdminProducts() {
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold mb-2">Category *</label>
+                  {categoriesLoading ? (
+                    <div className="text-gray-500">Loading...</div>
+                  ) : (
+                    <select
+                      value={formData.category_id}
+                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                      className="input-field"
+                      required
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-2">Product Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })}
+                    className="input-field"
+                  />
+                  {formData.image && (
+                    <p className="text-sm text-gray-600 mt-1">Selected: {formData.image.name}</p>
+                  )}
                 </div>
               </div>
 
