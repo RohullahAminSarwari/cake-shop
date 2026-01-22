@@ -44,6 +44,7 @@ export default function AdminDashboard() {
   const statCards = [
     { title: 'Total Users', value: stats.totalUsers, icon: '👥', color: 'bg-blue-500', link: '/admin/users' },
     { title: 'Total Products', value: stats.totalProducts, icon: '🎂', color: 'bg-pink-500', link: '/admin/products' },
+    { title: 'Categories', value: 'Manage', icon: '🏷️', color: 'bg-indigo-500', link: '/admin/categories' },
     { title: 'Total Orders', value: stats.totalOrders, icon: '📦', color: 'bg-green-500', link: '/admin/orders' },
     { title: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: '💰', color: 'bg-purple-500' },
   ];

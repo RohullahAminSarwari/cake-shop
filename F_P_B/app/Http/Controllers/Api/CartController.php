@@ -7,19 +7,36 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
+    private function getCartIdentifier()
+    {
+        // Start session if not started
+        if (!Session::has('cart_session_id')) {
+            Session::put('cart_session_id', Str::random(40));
+        }
+        
+        // If user is authenticated, use user ID
+        if (auth()->check()) {
+            return ['user_id' => auth()->id()];
+        }
+        // Otherwise use session ID for guest users
+        return ['session_id' => Session::get('cart_session_id')];
+    }
+
     public function index(Request $request)
     {
-        $user = $request->user();
-        
-        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+        $cartIdentifier = $this->getCartIdentifier();
+        $cart = Cart::firstOrCreate($cartIdentifier);
         $items = $cart->items()->with('product.images')->get();
         
         return response()->json([
             'items' => $items,
             'total' => $this->calculateTotal($items),
+            'is_guest' => !auth()->check(),
         ]);
     }
     
@@ -30,8 +47,8 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
         
-        $user = $request->user();
-        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+        $cartIdentifier = $this->getCartIdentifier();
+        $cart = Cart::firstOrCreate($cartIdentifier);
         
         $product = Product::findOrFail($request->product_id);
         
@@ -59,9 +76,11 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
         
-        $user = $request->user();
-        $cartItem = CartItem::whereHas('cart', function($query) use ($user) {
-            $query->where('user_id', $user->id);
+        $cartIdentifier = $this->getCartIdentifier();
+        $cartItem = CartItem::whereHas('cart', function($query) use ($cartIdentifier) {
+            foreach ($cartIdentifier as $key => $value) {
+                $query->where($key, $value);
+            }
         })->findOrFail($id);
         
         $cartItem->quantity = $request->quantity;
@@ -74,9 +93,11 @@ class CartController extends Controller
     
     public function remove($id)
     {
-        $user = request()->user();
-        $cartItem = CartItem::whereHas('cart', function($query) use ($user) {
-            $query->where('user_id', $user->id);
+        $cartIdentifier = $this->getCartIdentifier();
+        $cartItem = CartItem::whereHas('cart', function($query) use ($cartIdentifier) {
+            foreach ($cartIdentifier as $key => $value) {
+                $query->where($key, $value);
+            }
         })->findOrFail($id);
         
         $cartItem->delete();
@@ -86,8 +107,8 @@ class CartController extends Controller
     
     public function clear(Request $request)
     {
-        $user = $request->user();
-        $cart = Cart::where('user_id', $user->id)->first();
+        $cartIdentifier = $this->getCartIdentifier();
+        $cart = Cart::where($cartIdentifier)->first();
         
         if ($cart) {
             $cart->items()->delete();

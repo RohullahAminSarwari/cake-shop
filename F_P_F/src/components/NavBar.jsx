@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
+import Notifications from './Notifications';
 
 export default function NavBar() {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
@@ -33,9 +34,14 @@ export default function NavBar() {
             <Link to="/categories" className="text-gray-700 hover:text-pink-600 font-medium transition-colors">
               Categories
             </Link>
-            
             {isAuthenticated ? (
               <>
+                <Link to="/add-product" className="text-green-700 hover:text-green-800 font-medium transition-colors">
+                  Add Product
+                </Link>
+                <Link to="/add-category" className="text-blue-700 hover:text-blue-800 font-medium transition-colors">
+                  Add Category
+                </Link>
                 <Link to="/cart" className="text-gray-700 hover:text-pink-600 font-medium transition-colors relative">
                   Cart
                   {user?.cart_count > 0 && (
@@ -48,9 +54,15 @@ export default function NavBar() {
                   My Orders
                 </Link>
                 {isAdmin() && (
-                  <Link to="/admin/dashboard" className="text-purple-700 hover:text-purple-800 font-medium transition-colors">
-                    Admin
-                  </Link>
+                  <>
+                    <Link to="/admin/dashboard" className="text-purple-700 hover:text-purple-800 font-medium transition-colors">
+                      Admin
+                    </Link>
+                    <Link to="/admin/product-approval" className="text-orange-700 hover:text-orange-800 font-medium transition-colors">
+                      Approvals
+                    </Link>
+                    <Notifications />
+                  </>
                 )}
                 <div className="flex items-center space-x-4">
                   <span className="text-gray-700">Hi, {user?.name}</span>
@@ -97,10 +109,15 @@ export default function NavBar() {
             <Link to="/categories" className="block text-gray-700 hover:text-pink-600 font-medium">Categories</Link>
             {isAuthenticated ? (
               <>
+                <Link to="/add-product" className="block text-green-700 hover:text-green-800 font-medium">Add Product</Link>
+                <Link to="/add-category" className="block text-blue-700 hover:text-blue-800 font-medium">Add Category</Link>
                 <Link to="/cart" className="block text-gray-700 hover:text-pink-600 font-medium">Cart</Link>
                 <Link to="/orders" className="block text-gray-700 hover:text-pink-600 font-medium">My Orders</Link>
                 {isAdmin() && (
-                  <Link to="/admin/dashboard" className="block text-purple-700 hover:text-purple-800 font-medium">Admin</Link>
+                  <>
+                    <Link to="/admin/dashboard" className="block text-purple-700 hover:text-purple-800 font-medium">Admin</Link>
+                    <Link to="/admin/categories" className="block text-indigo-700 hover:text-indigo-800 font-medium">Categories</Link>
+                  </>
                 )}
                 <div className="pt-4 border-t">
                   <p className="text-gray-700 mb-2">Hi, {user?.name}</p>

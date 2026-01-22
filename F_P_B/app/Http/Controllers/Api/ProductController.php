@@ -31,8 +31,8 @@ class ProductController extends Controller
             });
         }
         
-        // Only active products
-        $query->where('status', 'active');
+        // Only active and approved products
+        $query->where('status', 'active')->where('approval_status', 'approved');
         
         $products = $query->latest()->paginate($request->get('per_page', 15));
         
@@ -41,7 +41,10 @@ class ProductController extends Controller
     
     public function show($id)
     {
-        $product = Product::with(['category', 'images', 'reviews'])->findOrFail($id);
+        $product = Product::with(['category', 'images', 'reviews'])
+            ->where('status', 'active')
+            ->where('approval_status', 'approved')
+            ->findOrFail($id);
         
         return response()->json($product);
     }

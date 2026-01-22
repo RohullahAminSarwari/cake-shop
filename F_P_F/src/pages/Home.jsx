@@ -4,12 +4,14 @@ import api from '../config/api';
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch featured products - you'll need to add this endpoint to your backend
     // For now, using placeholder
     fetchFeaturedProducts();
+    fetchCategories();
   }, []);
 
   const fetchFeaturedProducts = async () => {
@@ -21,6 +23,17 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching products:', error);
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      // Show only first 4 categories on home page
+      setCategories(categoriesData.slice(0, 4));
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -77,6 +90,48 @@ export default function Home() {
               <h3 className="text-xl font-bold mb-2">Custom Designs</h3>
               <p className="text-gray-600">Personalized cakes for special occasions</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Preview Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">Popular Categories</h2>
+            <p className="text-gray-600 text-lg">Explore our delicious collections</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                to={`/products?category=${category.id}`}
+                className="bg-white rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100 hover:border-pink-200 group"
+              >
+                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">
+                  {category.icon || '🎂'}
+                </div>
+                <h3 className="font-bold text-lg mb-2 group-hover:text-pink-600 transition-colors">
+                  {category.name}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Delicious treats
+                </p>
+              </Link>
+            ))}
+          </div>
+          
+          <div className="text-center">
+            <Link 
+              to="/categories" 
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              View All Categories
+            </Link>
           </div>
         </div>
       </section>
@@ -158,4 +213,3 @@ export default function Home() {
     </div>
   );
 }
-

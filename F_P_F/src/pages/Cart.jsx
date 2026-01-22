@@ -1,11 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Cart() {
+  const { isAuthenticated } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
+  const [isGuest, setIsGuest] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,6 +22,7 @@ export default function Cart() {
       // Handle different response formats for cart
       const cartData = response.data?.data || response.data || {};
       setCartItems(cartData.items || []);
+      setIsGuest(cartData.is_guest || false);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching cart:', error);

@@ -53,8 +53,21 @@ export default function Products() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Our Products</h1>
-        <p className="text-gray-600 text-lg">Discover our delicious collection of cakes and pastries</p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Our Products</h1>
+            <p className="text-gray-600 text-lg">Discover our delicious collection of cakes and pastries</p>
+          </div>
+          <Link 
+            to="/categories"
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            Browse Categories
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

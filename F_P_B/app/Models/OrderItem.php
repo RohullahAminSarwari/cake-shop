@@ -9,7 +9,7 @@ class OrderItem extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'order_id','product_id','quantity','price'
+        'order_id','product_id','quantity','price','product_creator_id'
     ];
 
     public function order()
@@ -20,5 +20,10 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productCreator()
+    {
+        return $this->belongsTo(User::class, 'product_creator_id');
     }
 }

@@ -8,7 +8,7 @@ class Cart extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['user_id'];
+    protected $fillable = ['user_id', 'session_id'];
 
     public function user()
     {
