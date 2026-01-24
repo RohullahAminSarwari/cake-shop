@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
+import guestCartService from '../services/guestCartService';
 
 export default function Cart() {
   const { isAuthenticated } = useAuth();
@@ -13,19 +14,32 @@ export default function Cart() {
 
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [isAuthenticated]);
 
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/cart');
-      // Handle different response formats for cart
-      const cartData = response.data?.data || response.data || {};
-      setCartItems(cartData.items || []);
-      setIsGuest(cartData.is_guest || false);
+      
+      if (isAuthenticated) {
+        // Authenticated user - fetch from API
+        const response = await api.get('/cart');
+        const cartData = response.data?.data || response.data || {};
+        setCartItems(cartData.items || []);
+        setIsGuest(cartData.is_guest || false);
+      } else {
+        // Guest user - fetch from local storage
+        const guestCart = guestCartService.getCart();
+        setCartItems(guestCart.items || []);
+        setIsGuest(true);
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching cart:', error);
+      // Fallback to guest cart if API fails
+      const guestCart = guestCartService.getCart();
+      setCartItems(guestCart.items || []);
+      setIsGuest(true);
       setLoading(false);
     }
   };
@@ -38,8 +52,17 @@ export default function Cart() {
 
     try {
       setUpdating(itemId);
-      await api.put(`/cart/items/${itemId}`, { quantity });
-      await fetchCart();
+      
+      if (isAuthenticated) {
+        // Authenticated user - use API
+        await api.put(`/cart/items/${itemId}`, { quantity });
+        await fetchCart();
+      } else {
+        // Guest user - use local storage
+        guestCartService.updateQuantity(itemId, quantity);
+        await fetchCart();
+      }
+      
       setUpdating(null);
     } catch (error) {
       console.error('Error updating cart:', error);
@@ -50,8 +73,17 @@ export default function Cart() {
   const removeItem = async (itemId) => {
     try {
       setUpdating(itemId);
-      await api.delete(`/cart/items/${itemId}`);
-      await fetchCart();
+      
+      if (isAuthenticated) {
+        // Authenticated user - use API
+        await api.delete(`/cart/items/${itemId}`);
+        await fetchCart();
+      } else {
+        // Guest user - use local storage
+        guestCartService.removeItem(itemId);
+        await fetchCart();
+      }
+      
       setUpdating(null);
     } catch (error) {
       console.error('Error removing item:', error);
@@ -168,6 +200,18 @@ export default function Cart() {
           <div className="card p-6 h-fit sticky top-24">
             <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
 
+            {isGuest && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>Guest Checkout Available:</strong> You can complete your purchase as a guest. 
+                  <Link to="/login" className="text-pink-600 hover:underline">
+                    Log in
+                  </Link> 
+                  {' '}to save your order history.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-4 mb-6">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
@@ -184,10 +228,16 @@ export default function Cart() {
             </div>
 
             <button
-              onClick={() => navigate('/checkout')}
+              onClick={() => {
+                if (isGuest) {
+                  navigate('/guest-checkout');
+                } else {
+                  navigate('/checkout');
+                }
+              }}
               className="btn-primary w-full mb-4"
             >
-              Proceed to Checkout
+              {isGuest ? 'Proceed to Guest Checkout' : 'Proceed to Checkout'}
             </button>
 
             <Link to="/products" className="btn-secondary w-full text-center block">

@@ -106,7 +106,7 @@ export default function AddProduct() {
       const response = await api.post('/products', productData);
       
       if (response.data.success) {
-        alert('Product submitted successfully! It will be visible once approved by an admin.');
+        alert(response.data.message || 'Product submitted successfully! It will be visible once approved by an admin.');
         navigate('/my-products');
       } else {
         alert('Failed to submit product. Please try again.');

@@ -48,9 +48,6 @@ const PublicPage = () => {
             <a href="/login" className="text-gray-600 hover:text-gray-800">
               Login
             </a>
-            <a href="/register" className="text-gray-600 hover:text-gray-800">
-              Register
-            </a>
           </div>
         </div>
       </nav>

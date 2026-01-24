@@ -26,6 +26,13 @@ export default function AdminDashboard() {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching stats:', error);
+      // Set default stats on error to prevent white screen
+      setStats({
+        totalUsers: 0,
+        totalProducts: 0,
+        totalOrders: 0,
+        totalRevenue: 0,
+      });
       setLoading(false);
     }
   };
@@ -38,6 +45,8 @@ export default function AdminDashboard() {
       setRecentOrders(ordersData);
     } catch (error) {
       console.error('Error fetching recent orders:', error);
+      // Set empty array on error to prevent white screen
+      setRecentOrders([]);
     }
   };
 
@@ -46,7 +55,7 @@ export default function AdminDashboard() {
     { title: 'Total Products', value: stats.totalProducts, icon: '🎂', color: 'bg-pink-500', link: '/admin/products' },
     { title: 'Categories', value: 'Manage', icon: '🏷️', color: 'bg-indigo-500', link: '/admin/categories' },
     { title: 'Total Orders', value: stats.totalOrders, icon: '📦', color: 'bg-green-500', link: '/admin/orders' },
-    { title: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: '💰', color: 'bg-purple-500' },
+    { title: 'Total Revenue', value: `$${(stats.totalRevenue || 0).toFixed(2)}`, icon: '💰', color: 'bg-purple-500' },
   ];
 
   if (loading) {

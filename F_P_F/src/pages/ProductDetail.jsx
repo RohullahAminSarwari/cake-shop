@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
+import guestCartService from '../services/guestCartService';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -20,9 +21,12 @@ export default function ProductDetail() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
+      console.log('Fetching product with ID:', id);
       const response = await api.get(`/products/${id}`);
+      console.log('Product response:', response.data);
       // Handle different response formats for single product
       const productData = response.data?.data || response.data || null;
+      console.log('Product data:', productData);
       setProduct(productData);
       setLoading(false);
     } catch (error) {
@@ -33,18 +37,49 @@ export default function ProductDetail() {
 
 
   const addToCart = async () => {
-    if (!isAuthenticated) {
-      navigate('/login');
+    console.log('Add to cart clicked', { product, isAuthenticated, quantity, id });
+    
+    if (!product) {
+      console.error('Product is null/undefined');
+      alert('Product not available');
+      return;
+    }
+
+    if (product.stock !== undefined && product.stock === 0) {
+      console.log('Product out of stock');
+      alert('Product is out of stock');
+      return;
+    }
+
+    if (quantity < 1) {
+      console.log('Invalid quantity:', quantity);
+      alert('Please select a valid quantity');
       return;
     }
 
     try {
       setAddingToCart(true);
-      await api.post('/cart/add', { product_id: id, quantity });
+      console.log('Adding to cart...');
+      
+      if (isAuthenticated) {
+        // Authenticated user - use API
+        console.log('Using API for authenticated user');
+        await api.post('/cart/add', { product_id: id, quantity });
+      } else {
+        // Guest user - use local storage
+        console.log('Using guest cart service');
+        const result = guestCartService.addItem(product, quantity);
+        console.log('Guest cart result:', result);
+        // Dispatch event to update cart count in navigation
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
+      }
+      
       setAddingToCart(false);
+      console.log('Product added successfully');
+      alert('Product added to cart!');
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add product to cart');
+      alert('Failed to add product to cart: ' + (error.response?.data?.message || error.message));
       setAddingToCart(false);
     }
   };
@@ -164,8 +199,28 @@ export default function ProductDetail() {
             >
               {addingToCart ? 'Adding...' : 'Add to Cart'}
             </button>
-            <button className="btn-secondary">
+            <button 
+              onClick={() => console.log('Test button clicked')}
+              className="btn-secondary"
+            >
               ❤️ Wishlist
+            </button>
+            {/* Debug button */}
+            <button 
+              onClick={() => {
+                console.log('Debug info:', { 
+                  product, 
+                  isAuthenticated, 
+                  quantity, 
+                  id, 
+                  addingToCart,
+                  stock: product?.stock 
+                });
+                alert('Debug info logged to console');
+              }}
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+            >
+              Debug
             </button>
           </div>
 

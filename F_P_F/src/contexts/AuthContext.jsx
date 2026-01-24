@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../config/api';
+import guestCartService from '../services/guestCartService';
 
 const AuthContext = createContext(null);
 
@@ -60,6 +61,14 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(response.data.user));
         setUser(response.data.user);
         setIsAuthenticated(true);
+        
+        // Merge guest cart with user cart (don't block login if this fails)
+        try {
+          await mergeGuestCart();
+        } catch (cartError) {
+          console.error('Guest cart merge failed, but login succeeded:', cartError);
+        }
+        
         return { success: true, data: response.data };
       } else {
         return { 
@@ -75,6 +84,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const mergeGuestCart = async () => {
+    try {
+      const guestCart = guestCartService.getCart();
+      if (guestCart.items && guestCart.items.length > 0) {
+        // Add each guest cart item to user's cart via API
+        for (const item of guestCart.items) {
+          await api.post('/cart/add', { 
+            product_id: item.product_id, 
+            quantity: item.quantity 
+          });
+        }
+        // Clear guest cart after merging
+        guestCartService.clearCart();
+      }
+    } catch (error) {
+      console.error('Error merging guest cart:', error);
+    }
+  };
+
   const register = async (userData) => {
     try {
       const response = await api.post('/register', userData);
@@ -83,6 +111,14 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(response.data.user));
         setUser(response.data.user);
         setIsAuthenticated(true);
+        
+        // Merge guest cart with user cart (don't block registration if this fails)
+        try {
+          await mergeGuestCart();
+        } catch (cartError) {
+          console.error('Guest cart merge failed, but registration succeeded:', cartError);
+        }
+        
         return { success: true, data: response.data };
       } else {
         return { 

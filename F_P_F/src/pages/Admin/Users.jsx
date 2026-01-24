@@ -10,7 +10,7 @@ export default function AdminUsers() {
     name: '',
     email: '',
     password: '',
-    role: 'customer',
+    role: 'seller', // Default to Product Creator for new users
   });
 
   useEffect(() => {
@@ -131,9 +131,11 @@ export default function AdminUsers() {
                       <td className="py-4 px-6">{user.email}</td>
                       <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                          user.role === 'seller' ? 'bg-green-100 text-green-800' : 
+                          'bg-gray-100 text-gray-800'
                         }`}>
-                          {user.role}
+                          {user.role === 'seller' ? 'Product Creator' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-gray-600">
@@ -228,9 +230,13 @@ export default function AdminUsers() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="input-field"
                 >
-                  <option value="customer">Customer</option>
+                  <option value="seller">Product Creator</option>
                   <option value="admin">Admin</option>
                 </select>
+                <p className="text-sm text-gray-600 mt-1">
+                  {formData.role === 'seller' && 'Can add and manage their own products'}
+                  {formData.role === 'admin' && 'Full system access and user management'}
+                </p>
               </div>
 
               <div className="flex gap-4 pt-4">

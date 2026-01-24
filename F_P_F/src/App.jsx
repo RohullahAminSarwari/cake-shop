@@ -5,10 +5,12 @@ import Products from './pages/Products';
 import Categories from './pages/Categories';
 import ProductDetail from './pages/ProductDetail';
 import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import GuestCheckout from './pages/GuestCheckout';
+import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
+import CreatorNotifications from './pages/Creator/Notifications';
 import AdminDashboard from './pages/Admin/Dashboard';
 import AdminProducts from './pages/Admin/Products';
 import AdminCategories from './pages/Admin/Categories';
@@ -17,6 +19,10 @@ import AdminUsers from './pages/Admin/Users';
 import ProductApproval from './pages/Admin/ProductApproval';
 import AddProduct from './pages/User/AddProduct';
 import AddCategory from './pages/User/AddCategory';
+import MyProducts from './pages/User/MyProducts';
+import EditProduct from './pages/User/EditProduct';
+import UserDashboard from './pages/User/Dashboard';
+import DashboardTest from './pages/User/DashboardTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -30,17 +36,13 @@ function App() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        
+        {/* Public Cart Routes - accessible to both guests and authenticated users */}
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/guest-checkout" element={<GuestCheckout />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
         {/* Protected Customer Routes */}
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/checkout"
           element={
@@ -58,6 +60,14 @@ function App() {
           }
         />
         <Route
+          path="/creator/notifications"
+          element={
+            <ProtectedRoute>
+              <CreatorNotifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/add-product"
           element={
             <ProtectedRoute>
@@ -70,6 +80,38 @@ function App() {
           element={
             <ProtectedRoute>
               <AddCategory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-products"
+          element={
+            <ProtectedRoute>
+              <MyProducts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-product/:id"
+          element={
+            <ProtectedRoute>
+              <EditProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard-test"
+          element={
+            <ProtectedRoute>
+              <DashboardTest />
             </ProtectedRoute>
           }
         />
