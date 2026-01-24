@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\UserCategoryController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController as CustomerOrderController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\GuestOrderController;
 use Illuminate\Support\Facades\Route;
   
 // Public Routes 
@@ -26,6 +27,9 @@ Route::post('/cart/add', [\App\Http\Controllers\Api\CartController::class, 'add'
 Route::put('/cart/items/{id}', [\App\Http\Controllers\Api\CartController::class, 'update']);
 Route::delete('/cart/items/{id}', [\App\Http\Controllers\Api\CartController::class, 'remove']);
 Route::delete('/cart', [\App\Http\Controllers\Api\CartController::class, 'clear']);
+
+// Guest Order Routes (Public)
+Route::post('/guest-orders', [GuestOrderController::class, 'store']);
 
 // Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -59,6 +63,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/{id}/read', [AdminNotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [AdminNotificationController::class, 'markAllAsRead']);
     Route::delete('/notifications/{id}', [AdminNotificationController::class, 'delete']);
+    
+    // Guest Order Management Routes (for product creators and admins)
+    Route::get('/guest-orders', [GuestOrderController::class, 'index']);
+    Route::get('/guest-orders/{id}', [GuestOrderController::class, 'show']);
+    Route::put('/guest-orders/{id}/status', [GuestOrderController::class, 'updateStatus']);
     
     // Admin Routes
     Route::middleware('role:admin')->prefix('admin')->group(function () {

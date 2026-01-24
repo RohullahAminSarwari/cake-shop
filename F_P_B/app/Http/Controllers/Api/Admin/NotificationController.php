@@ -13,27 +13,22 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = Notification::with('notifiable')
-            ->forUser($user->id)
+        $query = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc');
 
         // Filter by type
         if ($request->has('type')) {
-            $query->byType($request->type);
+            $query->where('type', $request->type);
         }
 
         // Filter unread only
         if ($request->has('unread') && $request->unread) {
-            $query->unread();
+            $query->where('is_read', false);
         }
 
         $notifications = $query->paginate(20);
 
-        return response()->json([
-            'success' => true,
-            'data' => $notifications,
-            'unread_count' => Notification::forUser($user->id)->unread()->count()
-        ]);
+        return response()->json($notifications);
     }
 
     public function markAsRead($id)
@@ -42,42 +37,31 @@ class NotificationController extends Controller
         
         // Check if notification belongs to user
         if ($notification->user_id !== Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 403);
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $notification->markAsRead();
+        $notification->is_read = true;
+        $notification->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification marked as read'
-        ]);
+        return response()->json($notification);
     }
 
     public function markAllAsRead()
     {
-        Notification::forUser(Auth::id())
-            ->unread()
+        Notification::where('user_id', Auth::id())
+            ->where('is_read', false)
             ->update(['is_read' => true]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'All notifications marked as read'
-        ]);
+        return response()->json(['message' => 'All notifications marked as read']);
     }
 
     public function getUnreadCount()
     {
-        $count = Notification::forUser(Auth::id())->unread()->count();
+        $count = Notification::where('user_id', Auth::id())
+            ->where('is_read', false)
+            ->count();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'unread_count' => $count
-            ]
-        ]);
+        return response()->json(['count' => $count]);
     }
 
     public function approveProduct(Request $request, $productId)
@@ -143,17 +127,11 @@ class NotificationController extends Controller
         
         // Check if notification belongs to user
         if ($notification->user_id !== Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 403);
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $notification->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification deleted successfully'
-        ]);
+        return response()->json(['message' => 'Notification deleted']);
     }
 }
