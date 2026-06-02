@@ -113,9 +113,9 @@ export default function ProductDetail() {
         {/* Product Images */}
         <div>
           <div className="aspect-square bg-gray-200 rounded-xl overflow-hidden mb-4">
-            {product.images?.[selectedImage] ? (
+            {product.images?.[selectedImage]?.url ? (
               <img
-                src={product.images[selectedImage]}
+                src={product.images[selectedImage].url}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -135,7 +135,7 @@ export default function ProductDetail() {
                     selectedImage === index ? 'border-pink-600' : 'border-gray-200'
                   }`}
                 >
-                  <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={image.url} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

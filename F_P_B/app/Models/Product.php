@@ -30,6 +30,13 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
+    public function getImageUrlsAttribute()
+    {
+        return $this->images->map(function ($image) {
+            return asset('storage/' . $image->image_path);
+        })->toArray();
+    }
+
     public function reviews()
     {
         return $this->hasMany(Review::class);

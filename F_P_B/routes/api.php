@@ -38,7 +38,12 @@ Route::post('/login', [AuthController::class, 'login']);
 // Protected Routes (Customer)
 Route::middleware('auth:sanctum')->group(function () {
     
+    // Authentication Routes
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+    Route::post('/refresh-token', [AuthController::class, 'refresh']);
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
     
     // Customer Order Routes
     Route::get('/orders', [CustomerOrderController::class, 'index']);

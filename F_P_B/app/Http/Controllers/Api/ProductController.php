@@ -36,6 +36,18 @@ class ProductController extends Controller
         
         $products = $query->latest()->paginate($request->get('per_page', 15));
         
+        // Transform products to include full image URLs
+        $products->getCollection()->transform(function ($product) {
+            $product->images = $product->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'image_path' => $image->image_path,
+                    'url' => 'http://localhost:8000/storage/' . $image->image_path
+                ];
+            });
+            return $product;
+        });
+        
         return response()->json($products);
     }
     
@@ -46,7 +58,38 @@ class ProductController extends Controller
             ->where('approval_status', 'approved')
             ->findOrFail($id);
         
-        return response()->json($product);
+        // Transform images to include full URLs
+        $transformedImages = $product->images->map(function ($image) {
+            return [
+                'id' => $image->id,
+                'image_path' => $image->image_path,
+                'url' => 'http://localhost:8000/storage/' . $image->image_path
+            ];
+        });
+        
+        // Create a new array response to avoid any model serialization issues
+        $response = [
+            'id' => $product->id,
+            'category_id' => $product->category_id,
+            'name' => $product->name,
+            'description' => $product->description,
+            'price' => $product->price,
+            'discount_price' => $product->discount_price,
+            'stock' => $product->stock,
+            'status' => $product->status,
+            'approval_status' => $product->approval_status,
+            'rejection_reason' => $product->rejection_reason,
+            'created_at' => $product->created_at,
+            'updated_at' => $product->updated_at,
+            'approved_by' => $product->approved_by,
+            'approved_at' => $product->approved_at,
+            'user_id' => $product->user_id,
+            'images' => $transformedImages,
+            'category' => $product->category,
+            'reviews' => $product->reviews
+        ];
+        
+        return response()->json($response);
     }
 
     public function myProducts(Request $request)
@@ -70,6 +113,18 @@ class ProductController extends Controller
         
         $products = $query->latest()->paginate($request->get('per_page', 15));
         
+        // Transform products to include full image URLs
+        $products->getCollection()->transform(function ($product) {
+            $product->images = $product->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'image_path' => $image->image_path,
+                    'url' => 'http://localhost:8000/storage/' . $image->image_path
+                ];
+            });
+            return $product;
+        });
+        
         return response()->json($products);
     }
 
@@ -85,6 +140,8 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:active,inactive',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
         ]);
 
         $product = Product::create([
@@ -99,10 +156,35 @@ class ProductController extends Controller
             'approval_status' => 'pending', // Requires admin approval
         ]);
 
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                if ($image->isValid()) {
+                    // Generate unique filename
+                    $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                    
+                    // Create the products directory if it doesn't exist
+                    $productsDir = storage_path('app/public/products');
+                    if (!is_dir($productsDir)) {
+                        mkdir($productsDir, 0755, true);
+                    }
+                    
+                    // Move the file
+                    $path = 'products/' . $filename;
+                    $image->move($productsDir, $filename);
+                    
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Product submitted successfully! It will be visible once approved by an admin.',
-            'data' => $product
+            'data' => $product->load('images')
         ]);
     }
 
@@ -119,9 +201,40 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:active,inactive',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
         ]);
 
         $product->update($validated);
+
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            // Delete old images
+            $product->images()->delete();
+            
+            // Add new images
+            foreach ($request->file('images') as $image) {
+                if ($image->isValid()) {
+                    // Generate unique filename
+                    $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                    
+                    // Create the products directory if it doesn't exist
+                    $productsDir = storage_path('app/public/products');
+                    if (!is_dir($productsDir)) {
+                        mkdir($productsDir, 0755, true);
+                    }
+                    
+                    // Move the file
+                    $path = 'products/' . $filename;
+                    $image->move($productsDir, $filename);
+                    
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            }
+        }
         
         // Reset approval status if product was modified
         $product->update(['approval_status' => 'pending']);
@@ -129,7 +242,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product updated successfully! It will be re-reviewed by admin.',
-            'data' => $product
+            'data' => $product->load('images')
         ]);
     }
 

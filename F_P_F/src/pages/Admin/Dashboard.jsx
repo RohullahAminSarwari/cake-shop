@@ -20,12 +20,15 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       const response = await api.get('/admin/dashboard/stats');
-      // Handle different response formats
-      const statsData = response.data?.data || response.data || {};
+      console.log('Admin Dashboard Stats Response:', response.data);
+      
+      // The API returns the stats directly, not wrapped in a data object
+      const statsData = response.data;
       setStats(statsData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching stats:', error);
+      console.error('Error response:', error.response?.data);
       // Set default stats on error to prevent white screen
       setStats({
         totalUsers: 0,
@@ -51,10 +54,10 @@ export default function AdminDashboard() {
   };
 
   const statCards = [
-    { title: 'Total Users', value: stats.totalUsers, icon: '👥', color: 'bg-blue-500', link: '/admin/users' },
-    { title: 'Total Products', value: stats.totalProducts, icon: '🎂', color: 'bg-pink-500', link: '/admin/products' },
+    { title: 'Total Users', value: stats.totalUsers || 0, icon: '👥', color: 'bg-blue-500', link: '/admin/users' },
+    { title: 'Total Products', value: stats.totalProducts || 0, icon: '🎂', color: 'bg-pink-500', link: '/admin/products' },
     { title: 'Categories', value: 'Manage', icon: '🏷️', color: 'bg-indigo-500', link: '/admin/categories' },
-    { title: 'Total Orders', value: stats.totalOrders, icon: '📦', color: 'bg-green-500', link: '/admin/orders' },
+    { title: 'Total Orders', value: stats.totalOrders || 0, icon: '📦', color: 'bg-green-500', link: '/admin/orders' },
     { title: 'Total Revenue', value: `$${(stats.totalRevenue || 0).toFixed(2)}`, icon: '💰', color: 'bg-purple-500' },
   ];
 
@@ -70,6 +73,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Debug Info - Remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <h3 className="font-bold text-yellow-800">Debug Info:</h3>
+          <pre className="text-xs text-yellow-700">{JSON.stringify(stats, null, 2)}</pre>
+        </div>
+      )}
+      
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-gray-600">Welcome back! Here's what's happening with your store.</p>

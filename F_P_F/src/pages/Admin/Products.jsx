@@ -31,6 +31,7 @@ export default function AdminProducts() {
     try {
       setLoading(true);
       const response = await api.get('/admin/products');
+      
       // Handle different response formats
       const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
       setProducts(productsData);

@@ -11,7 +11,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'images', 'shop'])->latest()->get();
+        $products = Product::with(['category', 'images'])->latest()->get();
         
         return response()->json($products);
     }
@@ -34,14 +34,14 @@ class ProductController extends Controller
             'sku', 'category_id', 'status'
         ]));
         
-        $product->load(['category', 'images', 'shop']);
+        $product->load(['category', 'images']);
         
         return response()->json($product, 201);
     }
     
     public function show($id)
     {
-        $product = Product::with(['category', 'images', 'shop', 'reviews'])->findOrFail($id);
+        $product = Product::with(['category', 'images', 'reviews'])->findOrFail($id);
         
         return response()->json($product);
     }
@@ -66,7 +66,7 @@ class ProductController extends Controller
              'category_id',  'status'
         ]));
         
-        $product->load(['category', 'images',]);
+        $product->load(['category', 'images']);
         
         return response()->json($product);
     }

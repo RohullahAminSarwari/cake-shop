@@ -94,9 +94,6 @@ export default function NavBar() {
                 {/* Show creator links for sellers */}
                 {user?.role === 'seller' && (
                   <>
-                    <Link to="/dashboard-test" className="text-red-700 hover:text-red-800 font-medium transition-colors">
-                      Debug Dashboard
-                    </Link>
                     <Link to="/dashboard" className="text-green-700 hover:text-green-800 font-medium transition-colors">
                       Dashboard
                     </Link>
@@ -118,9 +115,6 @@ export default function NavBar() {
                     </Link>
                     <Link to="/admin/product-approval" className="text-orange-700 hover:text-orange-800 font-medium transition-colors">
                       Approvals
-                    </Link>
-                    <Link to="/creator/notifications" className="text-purple-700 hover:text-purple-800 font-medium transition-colors">
-                      Notifications
                     </Link>
                   </>
                 )}
@@ -199,7 +193,6 @@ export default function NavBar() {
                 {/* Show creator links for sellers */}
                 {user?.role === 'seller' && (
                   <>
-                    <Link to="/dashboard-test" className="block text-red-700 hover:text-red-800 font-medium">Debug Dashboard</Link>
                     <Link to="/dashboard" className="block text-green-700 hover:text-green-800 font-medium">Dashboard</Link>
                     <Link to="/my-products" className="block text-green-700 hover:text-green-800 font-medium">My Products</Link>
                     <Link to="/add-product" className="block text-green-700 hover:text-green-800 font-medium">Add Product</Link>

@@ -22,7 +22,6 @@ import AddCategory from './pages/User/AddCategory';
 import MyProducts from './pages/User/MyProducts';
 import EditProduct from './pages/User/EditProduct';
 import UserDashboard from './pages/User/Dashboard';
-import DashboardTest from './pages/User/DashboardTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -104,14 +103,6 @@ function App() {
           element={
             <ProtectedRoute>
               <UserDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard-test"
-          element={
-            <ProtectedRoute>
-              <DashboardTest />
             </ProtectedRoute>
           }
         />

@@ -20,6 +20,8 @@ export default function AddProduct() {
     status: 'active',
   });
 
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -52,6 +54,38 @@ export default function AddProduct() {
         [name]: ''
       }));
     }
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file => {
+      const isValidType = file.type.startsWith('image/');
+      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
+      return isValidType && isValidSize;
+    });
+
+    if (validFiles.length !== files.length) {
+      setErrors(prev => ({
+        ...prev,
+        images: 'Only images (JPG, PNG, GIF) under 5MB are allowed'
+      }));
+    }
+
+    setImages(prev => [...prev, ...validFiles]);
+
+    // Create previews
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, e.target.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const validateForm = () => {
@@ -95,15 +129,29 @@ export default function AddProduct() {
     setLoading(true);
     
     try {
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        discount_price: formData.discount_price ? parseFloat(formData.discount_price) : null,
-        stock: parseInt(formData.stock),
-        category_id: parseInt(formData.category_id),
-      };
+      const formDataToSend = new FormData();
+      
+      // Add product data
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('price', formData.price);
+      if (formData.discount_price) {
+        formDataToSend.append('discount_price', formData.discount_price);
+      }
+      formDataToSend.append('stock', formData.stock);
+      formDataToSend.append('category_id', formData.category_id);
+      formDataToSend.append('status', formData.status);
 
-      const response = await api.post('/products', productData);
+      // Add images
+      images.forEach((image, index) => {
+        formDataToSend.append(`images[${index}]`, image);
+      });
+
+      const response = await api.post('/products', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
       if (response.data.success) {
         alert(response.data.message || 'Product submitted successfully! It will be visible once approved by an admin.');
@@ -113,8 +161,7 @@ export default function AddProduct() {
       }
     } catch (error) {
       console.error('Error submitting product:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to submit product';
-      alert(`Error: ${errorMessage}`);
+      alert('Error submitting product. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -249,6 +296,60 @@ export default function AddProduct() {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-2">Product Images</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                id="image-upload"
+              />
+              <label htmlFor="image-upload" className="cursor-pointer">
+                <div className="text-gray-600">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p className="text-sm">Click to upload images</p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB each</p>
+                </div>
+              </label>
+            </div>
+            
+            {errors.images && (
+              <p className="text-red-500 text-sm mt-2">{errors.images}</p>
+            )}
+
+            {/* Image Previews */}
+            {imagePreviews.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">Selected Images:</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">

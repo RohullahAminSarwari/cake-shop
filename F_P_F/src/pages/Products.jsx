@@ -188,9 +188,9 @@ export default function Products() {
           {filteredProducts.map((product) => (
             <div key={product.id} className="card overflow-hidden group">
               <div className="relative h-64 bg-gray-200 overflow-hidden">
-                {product.images?.[0] ? (
+                {product.images?.[0]?.url ? (
                   <img
-                    src={product.images[0]}
+                    src={product.images[0].url}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
