@@ -37,7 +37,6 @@ export default function AdminProducts() {
       setProducts(productsData);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching products:', error);
       setLoading(false);
     }
   };
@@ -50,7 +49,6 @@ export default function AdminProducts() {
       const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error fetching categories:', error);
     } finally {
       setCategoriesLoading(false);
     }
@@ -92,7 +90,6 @@ export default function AdminProducts() {
       resetForm();
       fetchProducts();
     } catch (error) {
-      console.error('Error saving product:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to save product';
       alert(`Error: ${errorMessage}`);
     }
@@ -120,7 +117,6 @@ export default function AdminProducts() {
       await api.delete(`/admin/products/${id}`);
       fetchProducts();
     } catch (error) {
-      console.error('Error deleting product:', error);
       alert('Failed to delete product');
     }
   };
@@ -188,7 +184,7 @@ export default function AdminProducts() {
                           <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                             {product.images?.[0] ? (
                               <img
-                                src={product.images[0]}
+                                src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
                               />

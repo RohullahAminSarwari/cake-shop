@@ -59,7 +59,6 @@ export default function UserDashboard() {
         const orders = Array.isArray(ordersData) ? ordersData : (ordersData.data || []);
         setRecentOrders(orders.slice(0, 5));
       } catch (orderError) {
-        console.log('Orders endpoint not available, using mock data');
         setRecentOrders([]);
       }
       

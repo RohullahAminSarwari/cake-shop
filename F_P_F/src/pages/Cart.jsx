@@ -100,43 +100,43 @@ export default function Cart() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center fade-in">
+          <div className="spinner mx-auto"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-bold mb-8">Shopping Cart</h1>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <h1 className="text-5xl font-bold mb-12 gradient-text fade-in">Shopping Cart</h1>
 
       {cartItems.length === 0 ? (
-        <div className="card p-12 text-center">
-          <div className="text-6xl mb-4">🛒</div>
-          <h2 className="text-2xl font-bold mb-4">Your cart is empty</h2>
-          <p className="text-gray-600 mb-8">Start adding some delicious cakes to your cart!</p>
-          <Link to="/products" className="btn-primary">
+        <div className="card p-16 text-center fade-in">
+          <div className="text-8xl mb-6">🛒</div>
+          <h2 className="text-3xl font-bold mb-4 gradient-text">Your cart is empty</h2>
+          <p className="text-gray-600 text-xl mb-8">Start adding some delicious cakes to your cart!</p>
+          <Link to="/products" className="btn-primary shadow-xl hover:shadow-2xl">
             Browse Products
           </Link>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-8">
           {/* Cart Items */}
-          <div className="md:col-span-2 space-y-4">
-            {cartItems.map((item) => (
-              <div key={item.id} className="card p-6 flex gap-6">
+          <div className="md:col-span-2 space-y-6">
+            {cartItems.map((item, index) => (
+              <div key={item.id} className="card p-6 flex gap-6 hover:scale-102 transition-all duration-300 fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                 <Link to={`/products/${item.product?.id}`} className="flex-shrink-0">
-                  <div className="w-32 h-32 bg-gray-200 rounded-lg overflow-hidden">
+                  <div className="w-32 h-32 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl overflow-hidden shadow-md">
                     {item.product?.images?.[0] ? (
                       <img
-                        src={item.product.images[0]}
+                        src={typeof item.product.images[0] === 'string' ? item.product.images[0] : item.product.images[0]?.url}
                         alt={item.product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">
+                      <div className="w-full h-full flex items-center justify-center text-5xl">
                         🎂
                       </div>
                     )}
@@ -145,7 +145,7 @@ export default function Cart() {
 
                 <div className="flex-1">
                   <Link to={`/products/${item.product?.id}`}>
-                    <h3 className="text-xl font-bold mb-2 hover:text-pink-600">
+                    <h3 className="text-2xl font-bold mb-2 hover:text-purple-600 transition-colors">
                       {item.product?.name}
                     </h3>
                   </Link>
@@ -155,28 +155,28 @@ export default function Cart() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <span className="text-2xl font-bold text-pink-600">
+                      <span className="text-3xl font-bold gradient-text">
                         ${(item.product?.discount_price || item.product?.price || 0) * item.quantity}
                       </span>
-                      <span className="text-gray-400">
+                      <span className="text-gray-400 text-lg">
                         ${item.product?.discount_price || item.product?.price} each
                       </span>
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center border rounded-lg">
+                      <div className="flex items-center border-2 border-purple-200 rounded-xl overflow-hidden">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={updating === item.id}
-                          className="w-10 h-10 hover:bg-gray-100 disabled:opacity-50"
+                          className="w-12 h-12 hover:bg-purple-100 disabled:opacity-50 transition-colors text-xl font-bold"
                         >
                           -
                         </button>
-                        <span className="w-12 text-center font-semibold">{item.quantity}</span>
+                        <span className="w-16 text-center font-bold text-xl">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           disabled={updating === item.id}
-                          className="w-10 h-10 hover:bg-gray-100 disabled:opacity-50"
+                          className="w-12 h-12 hover:bg-purple-100 disabled:opacity-50 transition-colors text-xl font-bold"
                         >
                           +
                         </button>
@@ -185,7 +185,7 @@ export default function Cart() {
                       <button
                         onClick={() => removeItem(item.id)}
                         disabled={updating === item.id}
-                        className="text-red-600 hover:text-red-700 font-semibold disabled:opacity-50"
+                        className="text-red-600 hover:text-red-700 font-semibold disabled:opacity-50 transition-colors"
                       >
                         Remove
                       </button>
@@ -197,14 +197,14 @@ export default function Cart() {
           </div>
 
           {/* Order Summary */}
-          <div className="card p-6 h-fit sticky top-24">
-            <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
+          <div className="card p-8 h-fit sticky top-24 shadow-xl fade-in">
+            <h2 className="text-3xl font-bold mb-6 gradient-text">Order Summary</h2>
 
             {isGuest && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-800">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4 mb-6">
+                <p className="text-sm text-purple-800">
                   <strong>Guest Checkout Available:</strong> You can complete your purchase as a guest. 
-                  <Link to="/login" className="text-pink-600 hover:underline">
+                  <Link to="/login" className="text-purple-600 hover:underline font-semibold">
                     Log in
                   </Link> 
                   {' '}to save your order history.
@@ -212,18 +212,18 @@ export default function Cart() {
               </div>
             )}
 
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between">
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between text-lg">
                 <span className="text-gray-600">Subtotal</span>
                 <span className="font-semibold">${subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-lg">
                 <span className="text-gray-600">Tax</span>
                 <span className="font-semibold">${tax.toFixed(2)}</span>
               </div>
-              <div className="border-t pt-4 flex justify-between text-xl">
+              <div className="border-t-2 border-purple-200 pt-4 flex justify-between text-2xl">
                 <span className="font-bold">Total</span>
-                <span className="font-bold text-pink-600">${total.toFixed(2)}</span>
+                <span className="font-bold gradient-text">${total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -235,7 +235,7 @@ export default function Cart() {
                   navigate('/checkout');
                 }
               }}
-              className="btn-primary w-full mb-4"
+              className="btn-primary w-full mb-4 shadow-xl hover:shadow-2xl text-lg"
             >
               {isGuest ? 'Proceed to Guest Checkout' : 'Proceed to Checkout'}
             </button>

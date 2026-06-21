@@ -127,7 +127,11 @@ export default function GuestCheckout() {
               <div key={item.id} className="card p-4 flex gap-4">
                 <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                   {item.product?.images?.[0] ? (
-                    <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={typeof item.product.images[0] === 'string' ? item.product.images[0] : item.product.images[0]?.url} 
+                      alt={item.product.name} 
+                      className="w-full h-full object-cover" 
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl">🎂</div>
                   )}

@@ -20,15 +20,12 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       const response = await api.get('/admin/dashboard/stats');
-      console.log('Admin Dashboard Stats Response:', response.data);
       
       // The API returns the stats directly, not wrapped in a data object
       const statsData = response.data;
       setStats(statsData);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      console.error('Error response:', error.response?.data);
       // Set default stats on error to prevent white screen
       setStats({
         totalUsers: 0,
@@ -47,7 +44,6 @@ export default function AdminDashboard() {
       const ordersData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
       setRecentOrders(ordersData);
     } catch (error) {
-      console.error('Error fetching recent orders:', error);
       // Set empty array on error to prevent white screen
       setRecentOrders([]);
     }
@@ -73,14 +69,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Debug Info - Remove in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <h3 className="font-bold text-yellow-800">Debug Info:</h3>
-          <pre className="text-xs text-yellow-700">{JSON.stringify(stats, null, 2)}</pre>
-        </div>
-      )}
-      
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-gray-600">Welcome back! Here's what's happening with your store.</p>

@@ -93,22 +93,21 @@ export default function AddCategory() {
   const commonIcons = ['🎂', '🧁', '🍪', '🍰', '🍩', '🥧', '🍮', '🍭', '🍬', '🧈', '🍯', '☕', '🥤'];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Add New Category</h1>
-        <p className="text-gray-600">Create a new product category</p>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+      <div className="mb-12 fade-in">
+        <h1 className="text-5xl font-bold mb-3 gradient-text">Add New Category</h1>
+        <p className="text-gray-600 text-xl">Create a new product category</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="card p-10 shadow-xl fade-in">
+        <form onSubmit={handleSubmit} className="space-y-8">
           <div>
-            <label className="block font-semibold mb-2">Category Name *</label>
+            <label className="block font-bold mb-2 text-gray-700">Category Name *</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`input-field ${errors.name ? 'border-red-500' : ''}`}
               placeholder="e.g., Birthday Cakes"
               maxLength="255"
               required
@@ -117,12 +116,11 @@ export default function AddCategory() {
           </div>
 
           <div>
-            <label className="block font-semibold mb-2">Description</label>
+            <label className="block font-bold mb-2 text-gray-700">Description</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className={`input-field ${errors.description ? 'border-red-500' : ''}`}
               rows="3"
               placeholder="Describe this category..."
               maxLength="1000"
@@ -134,29 +132,30 @@ export default function AddCategory() {
           </div>
 
           <div>
-            <label className="block font-semibold mb-2">Icon Emoji</label>
-            <div className="space-y-3">
+            <label className="block font-bold mb-2 text-gray-700">Icon Emoji</label>
+            <div className="space-y-4">
               <input
                 type="text"
                 name="icon"
                 value={formData.icon}
                 onChange={handleChange}
-                className={`input-field ${errors.icon ? 'border-red-500' : ''}`}
                 placeholder="🎂"
                 maxLength="2"
               />
               {errors.icon && <p className="text-red-500 text-sm mt-1">{errors.icon}</p>}
               
               <div>
-                <p className="text-sm text-gray-600 mb-2">Or choose from common icons:</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="text-sm text-gray-600 mb-3 font-medium">Or choose from common icons:</p>
+                <div className="flex flex-wrap gap-3">
                   {commonIcons.map((icon) => (
                     <button
                       key={icon}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, icon }))}
-                      className={`w-10 h-10 text-lg border rounded hover:bg-gray-100 transition-colors ${
-                        formData.icon === icon ? 'border-pink-500 bg-pink-50' : 'border-gray-300'
+                      className={`w-12 h-12 text-2xl border-2 rounded-xl hover:scale-110 transition-all shadow-md hover:shadow-lg ${
+                        formData.icon === icon 
+                          ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg' 
+                          : 'border-purple-200 hover:border-purple-300'
                       }`}
                     >
                       {icon}
@@ -168,12 +167,11 @@ export default function AddCategory() {
           </div>
 
           <div>
-            <label className="block font-semibold mb-2">Status *</label>
+            <label className="block font-bold mb-2 text-gray-700">Status *</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="input-field"
               required
             >
               <option value="active">Active</option>
@@ -181,14 +179,14 @@ export default function AddCategory() {
             </select>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <span className="text-yellow-600 text-xl">ℹ️</span>
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6">
+            <div className="flex items-center gap-3">
+              <span className="text-purple-600 text-2xl">ℹ️</span>
               <div>
-                <p className="text-sm text-yellow-800">
+                <p className="text-sm text-purple-800 font-medium">
                   <strong>Note:</strong> Your category will be submitted for admin approval before it becomes available.
                 </p>
-                <p className="text-sm text-yellow-700 mt-1">
+                <p className="text-sm text-purple-700 mt-1">
                   You'll receive a notification once it's reviewed.
                 </p>
               </div>
@@ -199,14 +197,14 @@ export default function AddCategory() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl text-lg"
             >
               {loading ? 'Submitting...' : 'Submit Category'}
             </button>
             <button
               type="button"
               onClick={() => navigate('/categories')}
-              className="btn-secondary"
+              className="btn-secondary shadow-md hover:shadow-lg"
             >
               Cancel
             </button>

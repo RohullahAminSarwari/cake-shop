@@ -28,6 +28,7 @@ export default function MyProducts() {
       }
       const response = await api.get('/my-products', { params });
       // Handle the response format from UserProductController
+     
       const productsData = response.data?.data || response.data || [];
       setProducts(Array.isArray(productsData) ? productsData : (productsData.data || []));
       setLoading(false);

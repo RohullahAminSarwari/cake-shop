@@ -21,7 +21,6 @@ export default function ProductApproval() {
       setPendingProducts(Array.isArray(data) ? data : []);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching pending products:', error);
       setLoading(false);
     }
   };
@@ -36,7 +35,6 @@ export default function ProductApproval() {
         alert('Product approved successfully!');
       }
     } catch (error) {
-      console.error('Error approving product:', error);
       alert('Error approving product: ' + (error.response?.data?.message || 'Unknown error'));
     } finally {
       setProcessingId(null);
@@ -56,7 +54,6 @@ export default function ProductApproval() {
         alert('Product rejected successfully!');
       }
     } catch (error) {
-      console.error('Error rejecting product:', error);
       alert('Error rejecting product: ' + (error.response?.data?.message || 'Unknown error'));
     } finally {
       setProcessingId(null);
@@ -65,82 +62,82 @@ export default function ProductApproval() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
-          <p className="mt-4 text-gray-600">Loading pending products...</p>
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center py-12 fade-in">
+          <div className="spinner mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-xl">Loading pending products...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Product Approval</h1>
-        <p className="text-gray-600">Review and approve products submitted by users</p>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="mb-12 fade-in">
+        <h1 className="text-5xl font-bold mb-3 gradient-text">Product Approval</h1>
+        <p className="text-gray-600 text-xl">Review and approve products submitted by users</p>
       </div>
 
       {pendingProducts.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl shadow-md">
-          <div className="text-6xl mb-4">✅</div>
-          <h3 className="text-2xl font-bold mb-2">No Pending Products</h3>
-          <p className="text-gray-600">All products have been reviewed.</p>
+        <div className="text-center py-16 card fade-in">
+          <div className="text-8xl mb-6">✅</div>
+          <h3 className="text-3xl font-bold mb-3 gradient-text">No Pending Products</h3>
+          <p className="text-gray-600 text-xl">All products have been reviewed.</p>
         </div>
       ) : (
         <div className="space-y-6">
-          {pendingProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+          {pendingProducts.map((product, index) => (
+            <div key={product.id} className="card p-8 hover:scale-102 transition-all duration-300 fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-4">
-                    <h3 className="text-xl font-bold text-gray-800">{product.name}</h3>
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full">
+                    <h3 className="text-2xl font-bold text-gray-800">{product.name}</h3>
+                    <span className="badge badge-warning">
                       Pending
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 mb-4 line-clamp-3">{product.description}</p>
+                  <p className="text-gray-600 mb-6 line-clamp-3 text-lg">{product.description}</p>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl">
                       <p className="text-sm text-gray-500">Price</p>
-                      <p className="font-semibold">${product.price}</p>
+                      <p className="font-bold text-xl gradient-text">${product.price}</p>
                     </div>
-                    <div>
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl">
                       <p className="text-sm text-gray-500">Stock</p>
-                      <p className="font-semibold">{product.stock}</p>
+                      <p className="font-bold text-xl text-blue-600">{product.stock}</p>
                     </div>
-                    <div>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl">
                       <p className="text-sm text-gray-500">Category</p>
-                      <p className="font-semibold">{product.category?.name || 'N/A'}</p>
+                      <p className="font-bold text-xl text-green-600">{product.category?.name || 'N/A'}</p>
                     </div>
-                    <div>
+                    <div className="bg-gradient-to-br from-orange-50 to-yellow-50 p-4 rounded-xl">
                       <p className="text-sm text-gray-500">Submitted by</p>
-                      <p className="font-semibold">{product.user?.name || 'Unknown'}</p>
+                      <p className="font-bold text-xl text-orange-600">{product.user?.name || 'Unknown'}</p>
                     </div>
                   </div>
 
                   {product.discount_price && (
-                    <div className="mb-4">
+                    <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl">
                       <span className="text-sm text-gray-500">Discount Price: </span>
-                      <span className="font-semibold text-green-600">${product.discount_price}</span>
+                      <span className="font-bold text-green-600 text-xl">${product.discount_price}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex flex-col gap-2 ml-4">
+                <div className="flex flex-col gap-3 ml-6">
                   <button
                     onClick={() => handleApprove(product.id)}
                     disabled={processingId === product.id}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg font-semibold"
                   >
                     {processingId === product.id ? 'Processing...' : 'Approve'}
                   </button>
                   <button
                     onClick={() => handleReject(product.id)}
                     disabled={processingId === product.id}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg font-semibold"
                   >
                     {processingId === product.id ? 'Processing...' : 'Reject'}
                   </button>

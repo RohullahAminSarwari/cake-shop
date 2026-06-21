@@ -21,24 +21,21 @@ export default function ProductDetail() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      console.log('Fetching product with ID:', id);
       const response = await api.get(`/products/${id}`);
-      console.log('Product response:', response.data);
+      console.log(response.data);
       // Handle different response formats for single product
       const productData = response.data?.data || response.data || null;
-      console.log('Product data:', productData);
       setProduct(productData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching product:', error);
       setLoading(false);
     }
+  
   };
 
 
   const addToCart = async () => {
-    console.log('Add to cart clicked', { product, isAuthenticated, quantity, id });
-    
     if (!product) {
       console.error('Product is null/undefined');
       alert('Product not available');
@@ -46,36 +43,29 @@ export default function ProductDetail() {
     }
 
     if (product.stock !== undefined && product.stock === 0) {
-      console.log('Product out of stock');
       alert('Product is out of stock');
       return;
     }
 
     if (quantity < 1) {
-      console.log('Invalid quantity:', quantity);
       alert('Please select a valid quantity');
       return;
     }
 
     try {
       setAddingToCart(true);
-      console.log('Adding to cart...');
       
       if (isAuthenticated) {
         // Authenticated user - use API
-        console.log('Using API for authenticated user');
         await api.post('/cart/add', { product_id: id, quantity });
       } else {
         // Guest user - use local storage
-        console.log('Using guest cart service');
-        const result = guestCartService.addItem(product, quantity);
-        console.log('Guest cart result:', result);
+        guestCartService.addItem(product, quantity);
         // Dispatch event to update cart count in navigation
         window.dispatchEvent(new CustomEvent('cartUpdated'));
       }
       
       setAddingToCart(false);
-      console.log('Product added successfully');
       alert('Product added to cart!');
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -86,9 +76,9 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center fade-in">
+          <div className="spinner mx-auto"></div>
         </div>
       </div>
     );
@@ -96,10 +86,11 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Product not found</h2>
-          <button onClick={() => navigate('/products')} className="btn-primary">
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center card p-16 fade-in">
+          <div className="text-8xl mb-6">🔍</div>
+          <h2 className="text-3xl font-bold mb-4 gradient-text">Product not found</h2>
+          <button onClick={() => navigate('/products')} className="btn-primary shadow-xl hover:shadow-2xl">
             Back to Products
           </button>
         </div>
@@ -108,14 +99,14 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="grid md:grid-cols-2 gap-12">
         {/* Product Images */}
-        <div>
-          <div className="aspect-square bg-gray-200 rounded-xl overflow-hidden mb-4">
-            {product.images?.[selectedImage]?.url ? (
+        <div className="fade-in">
+          <div className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl overflow-hidden mb-6 shadow-xl">
+            {product.images?.[selectedImage] ? (
               <img
-                src={product.images[selectedImage].url}
+                src={typeof product.images[selectedImage] === 'string' ? product.images[selectedImage] : product.images[selectedImage]?.url}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -131,11 +122,15 @@ export default function ProductDetail() {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                    selectedImage === index ? 'border-pink-600' : 'border-gray-200'
+                  className={`aspect-square rounded-xl overflow-hidden border-2 hover:scale-105 transition-all duration-300 ${
+                    selectedImage === index ? 'border-purple-500 shadow-lg' : 'border-purple-200'
                   }`}
                 >
-                  <img src={image.url} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  <img 
+                    src={typeof image === 'string' ? image : image?.url} 
+                    alt={`${product.name} ${index + 1}`} 
+                    className="w-full h-full object-cover" 
+                  />
                 </button>
               ))}
             </div>
@@ -143,48 +138,48 @@ export default function ProductDetail() {
         </div>
 
         {/* Product Info */}
-        <div>
-          <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
+        <div className="fade-in" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-5xl font-bold mb-4 gradient-text">{product.name}</h1>
           <div className="flex items-center gap-4 mb-6">
-            <span className="text-3xl font-bold text-pink-600">
+            <span className="text-4xl font-bold gradient-text">
               ${product.discount_price || product.price}
             </span>
             {product.discount_price && (
               <>
                 <span className="text-2xl text-gray-400 line-through">${product.price}</span>
-                <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                <span className="badge badge-danger">
                   {Math.round(((product.price - product.discount_price) / product.price) * 100)}% OFF
                 </span>
               </>
             )}
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">Description</h3>
-            <p className="text-gray-600 leading-relaxed">{product.description}</p>
+          <div className="card p-6 mb-6">
+            <h3 className="text-lg font-bold mb-3 text-gray-700">Description</h3>
+            <p className="text-gray-600 leading-relaxed text-lg">{product.description}</p>
           </div>
 
           {product.stock !== undefined && (
             <div className="mb-6">
-              <span className={`font-semibold ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`font-bold text-lg ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
               </span>
             </div>
           )}
 
-          <div className="mb-6">
-            <label className="block font-semibold mb-2">Quantity</label>
+          <div className="card p-6 mb-6">
+            <label className="block font-bold mb-3 text-gray-700">Quantity</label>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 border border-gray-300 rounded-lg hover:bg-gray-100"
+                className="w-12 h-12 border-2 border-purple-200 rounded-xl hover:bg-purple-100 transition-colors text-xl font-bold"
               >
                 -
               </button>
-              <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
+              <span className="text-2xl font-bold w-16 text-center">{quantity}</span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 border border-gray-300 rounded-lg hover:bg-gray-100"
+                className="w-12 h-12 border-2 border-purple-200 rounded-xl hover:bg-purple-100 transition-colors text-xl font-bold"
               >
                 +
               </button>
@@ -195,39 +190,21 @@ export default function ProductDetail() {
             <button
               onClick={addToCart}
               disabled={addingToCart || (product.stock !== undefined && product.stock === 0)}
-              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl text-lg"
             >
               {addingToCart ? 'Adding...' : 'Add to Cart'}
             </button>
             <button 
-              onClick={() => console.log('Test button clicked')}
-              className="btn-secondary"
+              className="btn-secondary shadow-md hover:shadow-lg"
             >
               ❤️ Wishlist
-            </button>
-            {/* Debug button */}
-            <button 
-              onClick={() => {
-                console.log('Debug info:', { 
-                  product, 
-                  isAuthenticated, 
-                  quantity, 
-                  id, 
-                  addingToCart,
-                  stock: product?.stock 
-                });
-                alert('Debug info logged to console');
-              }}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Debug
             </button>
           </div>
 
           {product.category && (
-            <div className="mt-6 pt-6 border-t">
+            <div className="mt-6 pt-6 border-t-2 border-purple-200">
               <p className="text-sm text-gray-600">
-                Category: <span className="font-semibold">{product.category.name}</span>
+                Category: <span className="font-bold text-purple-600">{product.category.name}</span>
               </p>
             </div>
           )}

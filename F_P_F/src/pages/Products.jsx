@@ -33,7 +33,9 @@ export default function Products() {
       } else {
         // Guests and non-seller users see all approved products
         response = await api.get('/products', { params });
+        
       }
+       console.log(response.data);
 
       // Handle different response formats
       let productsData;
@@ -103,26 +105,26 @@ export default function Products() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mb-12 fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-bold mb-2">
+            <h1 className="text-5xl font-bold mb-3 gradient-text">
               {isAuthenticated && user?.role === 'seller' ? 'My Products' : 'Our Products'}
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-xl">
               {isAuthenticated && user?.role === 'seller'
                 ? 'Manage your products and track their status' 
                 : 'Discover our delicious collection of cakes and pastries'
               }
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             {isAuthenticated && user?.role === 'seller' && (
               <Link 
                 to="/add-product"
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                className="btn-primary inline-flex items-center shadow-xl hover:shadow-2xl"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -132,7 +134,7 @@ export default function Products() {
             )}
             <Link 
               to="/categories"
-              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg"
+              className="btn-secondary inline-flex items-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -144,7 +146,7 @@ export default function Products() {
       </div>
 
       {/* Filters */}
-      <div className="mb-8 bg-white p-6 rounded-xl shadow-md">
+      <div className="mb-8 card fade-in">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -153,7 +155,6 @@ export default function Products() {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field"
             />
           </div>
 
@@ -165,7 +166,6 @@ export default function Products() {
                 setSelectedCategory(e.target.value);
                 setSearchParams({ category: e.target.value });
               }}
-              className="input-field"
             >
               <option value="all">All Categories</option>
               {categories.map(category => (
@@ -180,62 +180,62 @@ export default function Products() {
 
       {/* Products Grid */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="text-center py-12 fade-in">
+          <div className="spinner mx-auto"></div>
         </div>
       ) : filteredProducts.length > 0 ? (
         <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="card overflow-hidden group">
-              <div className="relative h-64 bg-gray-200 overflow-hidden">
-                {product.images?.[0]?.url ? (
+          {filteredProducts.map((product, index) => (
+            <div key={product.id} className="card overflow-hidden group hover:scale-105 transition-all duration-300 fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+              <div className="relative h-64 bg-gradient-to-br from-purple-100 to-pink-100 overflow-hidden">
+                {product.images?.[0] ? (
                   <img
-                    src={product.images[0].url}
+                    src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-6xl">
+                  <div className="w-full h-full flex items-center justify-center text-7xl">
                     🎂
                   </div>
                 )}
                 {product.discount_price && (
-                  <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
                     Sale
                   </div>
                 )}
                 {/* Show status badge for sellers */}
                 {isAuthenticated && user?.role === 'seller' && (
                   <div className="absolute top-4 left-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(product.approval_status || product.status)}`}>
+                    <span className={`badge ${getStatusBadge(product.approval_status || product.status)}`}>
                       {(product.approval_status || product.status)?.charAt(0).toUpperCase() + (product.approval_status || product.status)?.slice(1)}
                     </span>
                   </div>
                 )}
               </div>
-              <div className="p-4">
-                <h3 className="font-bold text-lg mb-2">{product.name}</h3>
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+              <div className="p-6">
+                <h3 className="font-bold text-xl mb-2 group-hover:text-purple-600 transition-colors">{product.name}</h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-2xl font-bold text-pink-600">
+                    <span className="text-3xl font-bold gradient-text">
                       ${product.discount_price || product.price}
                     </span>
                     {product.discount_price && (
-                      <span className="text-gray-400 line-through ml-2">${product.price}</span>
+                      <span className="text-gray-400 line-through ml-2 text-lg">${product.price}</span>
                     )}
                   </div>
                   {isAuthenticated && user?.role === 'seller' ? (
                     <div className="flex gap-2">
                       <Link
                         to={`/edit-product/${product.id}`}
-                        className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm shadow-md hover:shadow-lg"
                       >
                         Edit
                       </Link>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
-                        className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm shadow-md hover:shadow-lg"
                       >
                         Delete
                       </button>
@@ -243,7 +243,7 @@ export default function Products() {
                   ) : (
                     <Link
                       to={`/products/${product.id}`}
-                      className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors"
+                      className="btn-primary text-sm px-4 py-2"
                     >
                       View
                     </Link>
@@ -254,21 +254,21 @@ export default function Products() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-xl shadow-md">
-          <div className="text-6xl mb-4">
+        <div className="text-center py-16 card fade-in">
+          <div className="text-7xl mb-6">
             {isAuthenticated && user?.role === 'seller' ? '📦' : '🔍'}
           </div>
-          <h3 className="text-2xl font-bold mb-2">
+          <h3 className="text-3xl font-bold mb-3 gradient-text">
             {isAuthenticated && user?.role === 'seller' ? 'No products yet' : 'No products found'}
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 text-lg mb-8">
             {isAuthenticated && user?.role === 'seller'
               ? 'Start by adding your first product to showcase your creations'
               : 'Try adjusting your search or filters'
             }
           </p>
           {isAuthenticated && user?.role === 'seller' && (
-            <Link to="/add-product" className="btn-primary">
+            <Link to="/add-product" className="btn-primary shadow-xl hover:shadow-2xl">
               Add Your First Product
             </Link>
           )}

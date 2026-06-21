@@ -103,7 +103,8 @@ export default function EditProduct() {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const validFiles = files.filter(file => {
-      const isValidType = file.type.startsWith('image/');
+      const isValidType = file.type.startsWith('image/') && 
+        ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(file.type);
       const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
       return isValidType && isValidSize;
     });
@@ -111,7 +112,7 @@ export default function EditProduct() {
     if (validFiles.length !== files.length) {
       setErrors(prev => ({
         ...prev,
-        images: 'Only images (JPG, PNG, GIF) under 5MB are allowed'
+        images: 'Only images (JPG, PNG, GIF, WEBP) under 5MB are allowed'
       }));
     }
 
@@ -402,7 +403,7 @@ export default function EditProduct() {
                   {existingImages.map((image, index) => (
                     <div key={index} className="relative group">
                       <img
-                        src={`/storage/${image.image_path}`}
+                        src={typeof image === 'string' ? image : (image.url || image.image_path ? `/storage/${image.image_path}` : image)}
                         alt={`Current image ${index + 1}`}
                         className="w-full h-24 object-cover rounded-lg border border-gray-200"
                       />
@@ -437,7 +438,7 @@ export default function EditProduct() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                   <p className="text-sm">Click to upload new images</p>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB each (replaces all current images)</p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF, WEBP up to 5MB each (replaces all current images)</p>
                 </div>
               </label>
             </div>

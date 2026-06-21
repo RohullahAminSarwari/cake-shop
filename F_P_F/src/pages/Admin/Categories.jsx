@@ -28,14 +28,12 @@ export default function AdminCategories() {
       setCategories(categoriesData);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching categories:', error);
       // Fallback to public endpoint if admin endpoint fails
       try {
         const response = await api.get('/categories');
         const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
         setCategories(categoriesData);
       } catch (fallbackError) {
-        console.error('Error fetching categories from public endpoint:', fallbackError);
         setCategories([]);
       }
       setLoading(false);
@@ -64,7 +62,6 @@ export default function AdminCategories() {
       resetForm();
       fetchCategories();
     } catch (error) {
-      console.error('Error saving category:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to save category';
       alert(`Error: ${errorMessage}`);
     }
@@ -89,7 +86,6 @@ export default function AdminCategories() {
       fetchCategories();
       alert('Category deleted successfully!');
     } catch (error) {
-      console.error('Error deleting category:', error);
       const errorMessage = error.response?.data?.message || 'Failed to delete category';
       alert(`Error: ${errorMessage}`);
     }

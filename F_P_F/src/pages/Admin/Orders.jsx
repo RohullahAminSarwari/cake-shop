@@ -60,7 +60,6 @@ export default function AdminOrders() {
       setOrders(ordersData);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching orders:', error);
       setLoading(false);
     }
   };
@@ -72,7 +71,6 @@ export default function AdminOrders() {
       const usersData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
       setUsers(usersData);
     } catch (error) {
-      console.error('Error fetching users:', error);
     } finally {
       setUsersLoading(false);
     }
@@ -85,7 +83,6 @@ export default function AdminOrders() {
       const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
       setProducts(productsData);
     } catch (error) {
-      console.error('Error fetching products:', error);
     } finally {
       setProductsLoading(false);
     }
@@ -96,7 +93,6 @@ export default function AdminOrders() {
       await api.put(`/admin/orders/${orderId}`, { status: newStatus });
       fetchOrders();
     } catch (error) {
-      console.error('Error updating order:', error);
       alert('Failed to update order status');
     }
   };
@@ -152,7 +148,6 @@ export default function AdminOrders() {
       setShowCreateForm(false);
       fetchOrders(); // Refresh the orders list
     } catch (error) {
-      console.error('Error creating order:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to create order';
       alert(`Error: ${errorMessage}`);
     }

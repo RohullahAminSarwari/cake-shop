@@ -59,7 +59,8 @@ export default function AddProduct() {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const validFiles = files.filter(file => {
-      const isValidType = file.type.startsWith('image/');
+      const isValidType = file.type.startsWith('image/') && 
+        ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(file.type);
       const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
       return isValidType && isValidSize;
     });
@@ -67,7 +68,7 @@ export default function AddProduct() {
     if (validFiles.length !== files.length) {
       setErrors(prev => ({
         ...prev,
-        images: 'Only images (JPG, PNG, GIF) under 5MB are allowed'
+        images: 'Only images (JPG, PNG, GIF, WEBP) under 5MB are allowed'
       }));
     }
 
@@ -169,33 +170,32 @@ export default function AddProduct() {
 
   if (fetchingCategories) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
-          <p className="mt-4 text-gray-600">Loading categories...</p>
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+        <div className="text-center py-12 fade-in">
+          <div className="spinner mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-xl">Loading categories...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Add New Product</h1>
-        <p className="text-gray-600">Submit your product for admin approval</p>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+      <div className="mb-12 fade-in">
+        <h1 className="text-5xl font-bold mb-3 gradient-text">Add New Product</h1>
+        <p className="text-gray-600 text-xl">Submit your product for admin approval</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="card p-10 shadow-xl fade-in">
+        <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block font-semibold mb-2">Product Name *</label>
+              <label className="block font-bold mb-2 text-gray-700">Product Name *</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`input-field ${errors.name ? 'border-red-500' : ''}`}
                 placeholder="Enter product name"
                 required
               />
@@ -203,12 +203,11 @@ export default function AddProduct() {
             </div>
 
             <div>
-              <label className="block font-semibold mb-2">Category *</label>
+              <label className="block font-bold mb-2 text-gray-700">Category *</label>
               <select
                 name="category_id"
                 value={formData.category_id}
                 onChange={handleChange}
-                className={`input-field ${errors.category_id ? 'border-red-500' : ''}`}
                 required
               >
                 <option value="">Select a category</option>
@@ -223,12 +222,11 @@ export default function AddProduct() {
           </div>
 
           <div>
-            <label className="block font-semibold mb-2">Description *</label>
+            <label className="block font-bold mb-2 text-gray-700">Description *</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className={`input-field ${errors.description ? 'border-red-500' : ''}`}
               rows="4"
               placeholder="Describe your product..."
               required
@@ -238,13 +236,12 @@ export default function AddProduct() {
 
           <div className="grid md:grid-cols-3 gap-6">
             <div>
-              <label className="block font-semibold mb-2">Price ($) *</label>
+              <label className="block font-bold mb-2 text-gray-700">Price ($) *</label>
               <input
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={handleChange}
-                className={`input-field ${errors.price ? 'border-red-500' : ''}`}
                 placeholder="0.00"
                 step="0.01"
                 min="0"
@@ -254,13 +251,12 @@ export default function AddProduct() {
             </div>
 
             <div>
-              <label className="block font-semibold mb-2">Discount Price ($)</label>
+              <label className="block font-bold mb-2 text-gray-700">Discount Price ($)</label>
               <input
                 type="number"
                 name="discount_price"
                 value={formData.discount_price}
                 onChange={handleChange}
-                className={`input-field ${errors.discount_price ? 'border-red-500' : ''}`}
                 placeholder="0.00"
                 step="0.01"
                 min="0"
@@ -269,13 +265,12 @@ export default function AddProduct() {
             </div>
 
             <div>
-              <label className="block font-semibold mb-2">Stock *</label>
+              <label className="block font-bold mb-2 text-gray-700">Stock *</label>
               <input
                 type="number"
                 name="stock"
                 value={formData.stock}
                 onChange={handleChange}
-                className={`input-field ${errors.stock ? 'border-red-500' : ''}`}
                 placeholder="0"
                 min="0"
                 required
@@ -285,12 +280,11 @@ export default function AddProduct() {
           </div>
 
           <div>
-            <label className="block font-semibold mb-2">Status *</label>
+            <label className="block font-bold mb-2 text-gray-700">Status *</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="input-field"
               required
             >
               <option value="active">Active</option>
@@ -299,8 +293,8 @@ export default function AddProduct() {
           </div>
 
           <div>
-            <label className="block font-semibold mb-2">Product Images</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <label className="block font-bold mb-2 text-gray-700">Product Images</label>
+            <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-400 transition-colors bg-gradient-to-br from-purple-50 to-pink-50">
               <input
                 type="file"
                 multiple
@@ -311,11 +305,11 @@ export default function AddProduct() {
               />
               <label htmlFor="image-upload" className="cursor-pointer">
                 <div className="text-gray-600">
-                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="mx-auto h-16 w-16 text-purple-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
-                  <p className="text-sm">Click to upload images</p>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB each</p>
+                  <p className="text-lg font-medium">Click to upload images</p>
+                  <p className="text-sm text-gray-500 mt-2">PNG, JPG, GIF, WEBP up to 5MB each</p>
                 </div>
               </label>
             </div>
@@ -326,22 +320,22 @@ export default function AddProduct() {
 
             {/* Image Previews */}
             {imagePreviews.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Selected Images:</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="mt-6">
+                <p className="text-sm font-bold text-gray-700 mb-3">Selected Images:</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {imagePreviews.map((preview, index) => (
                     <div key={index} className="relative group">
                       <img
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                        className="w-full h-32 object-cover rounded-xl border-2 border-purple-200 shadow-md"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
                       >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -352,14 +346,14 @@ export default function AddProduct() {
             )}
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <span className="text-yellow-600 text-xl">ℹ️</span>
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6">
+            <div className="flex items-center gap-3">
+              <span className="text-purple-600 text-2xl">ℹ️</span>
               <div>
-                <p className="text-sm text-yellow-800">
+                <p className="text-sm text-purple-800 font-medium">
                   <strong>Note:</strong> Your product will be submitted for admin approval before it becomes visible in the shop.
                 </p>
-                <p className="text-sm text-yellow-700 mt-1">
+                <p className="text-sm text-purple-700 mt-1">
                   You'll receive a notification once it's reviewed.
                 </p>
               </div>
@@ -370,14 +364,14 @@ export default function AddProduct() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl text-lg"
             >
               {loading ? 'Submitting...' : 'Submit Product'}
             </button>
             <button
               type="button"
               onClick={() => navigate('/my-products')}
-              className="btn-secondary"
+              className="btn-secondary shadow-md hover:shadow-lg"
             >
               Cancel
             </button>

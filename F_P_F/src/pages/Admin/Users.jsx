@@ -26,7 +26,6 @@ export default function AdminUsers() {
       setUsers(usersData);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching users:', error);
       setLoading(false);
     }
   };
@@ -44,7 +43,6 @@ export default function AdminUsers() {
       resetForm();
       fetchUsers();
     } catch (error) {
-      console.error('Error saving user:', error);
       alert('Failed to save user');
     }
   };
@@ -67,7 +65,6 @@ export default function AdminUsers() {
       await api.delete(`/admin/users/${id}`);
       fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
       alert('Failed to delete user');
     }
   };
