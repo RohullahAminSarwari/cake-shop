@@ -21,6 +21,8 @@ class UserProductController extends Controller
             'stock' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:active,inactive',
+            'images' => 'array',
+            'images.*' => 'image|mimes:jpeg,jpg,png,gif,webp|max:5120', // 5MB max
         ]);
         
         $productData = $request->only([
@@ -35,13 +37,26 @@ class UserProductController extends Controller
         $product = Product::create($productData);
         
         // Handle product images if any
-        if ($request->has('images')) {
-            foreach ($request->images as $image) {
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'image_path' => $image,
-                ]);
+        if ($request->hasFile('images')) {
+            $images = $request->file('images');
+            \Log::info('Images received:', ['count' => is_array($images) ? count($images) : 0]);
+            if (is_array($images)) {
+                foreach ($images as $index => $image) {
+                    if ($image && $image->isValid()) {
+                        \Log::info('Processing image:', ['index' => $index, 'original_name' => $image->getClientOriginalName()]);
+                        $path = $image->store('products', 'public');
+                        \Log::info('Image stored at:', ['path' => $path]);
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'image_path' => $path,
+                        ]);
+                    } else {
+                        \Log::error('Invalid image:', ['index' => $index, 'error' => $image ? $image->getError() : 'null']);
+                    }
+                }
             }
+        } else {
+            \Log::info('No images received in request');
         }
         
         // Create notification for admins
@@ -68,12 +83,29 @@ class UserProductController extends Controller
             'stock' => 'sometimes|required|integer|min:0',
             'category_id' => 'sometimes|required|exists:categories,id',
             'status' => 'sometimes|required|in:active,inactive',
+            'images' => 'array',
+            'images.*' => 'image|mimes:jpeg,jpg,png,gif,webp|max:5120', // 5MB max
         ]);
         
         $product->update($request->only([
             'name', 'description', 'price', 'discount_price', 'stock',
             'category_id', 'status'
         ]));
+        
+        // Handle product images if any (replace all existing images)
+        if ($request->hasFile('images')) {
+            // Delete existing images
+            ProductImage::where('product_id', $product->id)->delete();
+            
+            // Upload new images
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image_path' => $path,
+                ]);
+            }
+        }
         
         // If product was previously rejected, set back to pending
         if ($product->approval_status === 'rejected') {
