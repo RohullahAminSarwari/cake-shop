@@ -8,6 +8,8 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * dfdd
      */
     public function up(): void
     {
