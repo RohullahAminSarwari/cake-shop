@@ -7,59 +7,39 @@ export default function Categories() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  useEffect(() => { fetchCategories(); }, []);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Fetch categories
-      const categoriesResponse = await api.get('/categories');
-      const categoriesData = Array.isArray(categoriesResponse.data) 
-        ? categoriesResponse.data 
-        : (categoriesResponse.data?.data || []);
-      
-      // Fetch products count for each category
-      const categoriesWithCounts = await Promise.all(
-        categoriesData.map(async (category) => {
+      const r = await api.get('/categories');
+      const data = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+
+      const withCounts = await Promise.all(
+        data.map(async (cat) => {
           try {
-            const productsResponse = await api.get(`/products?category_id=${category.id}`);
-            const productsData = Array.isArray(productsResponse.data) 
-              ? productsResponse.data 
-              : (productsResponse.data?.data || []);
-            
-            return {
-              ...category,
-              productCount: productsData.length
-            };
-          } catch (err) {
-            console.error(`Error fetching products for category ${category.id}:`, err);
-            return {
-              ...category,
-              productCount: 0
-            };
+            const pr = await api.get(`/products?category_id=${cat.id}`);
+            const pd = Array.isArray(pr.data) ? pr.data : (pr.data?.data || []);
+            return { ...cat, productCount: pd.length };
+          } catch {
+            return { ...cat, productCount: 0 };
           }
         })
       );
-      
-      setCategories(categoriesWithCounts);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      setError('Failed to load categories. Please try again later.');
+      setCategories(withCounts);
+    } catch {
+      setError('Failed to load categories. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
-          <p className="mt-4 text-gray-600">Loading categories...</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="flex justify-center">
+          <div className="w-8 h-8 border-2 border-stone-200 border-t-brand-600 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -67,100 +47,83 @@ export default function Categories() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12 bg-white rounded-xl shadow-md p-8">
-          <div className="text-6xl mb-4">❌</div>
-          <h3 className="text-2xl font-bold mb-2 text-red-600">Error Loading Categories</h3>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button 
-            onClick={fetchCategories}
-            className="bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors"
-          >
-            Try Again
-          </button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center card p-12 max-w-md mx-auto">
+          <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-stone-900 mb-2">Something went wrong</h3>
+          <p className="text-sm text-stone-500 mb-6">{error}</p>
+          <button onClick={fetchCategories} className="btn-primary">Try Again</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Header */}
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-          Browse Categories
-        </h1>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Explore our delicious collection organized by category. Find exactly what you're craving!
-        </p>
+      <div className="mb-10">
+        <h1 className="section-title">Categories</h1>
+        <p className="section-subtitle">Explore our collection organized by type</p>
       </div>
 
-      {/* Categories Grid */}
       {categories.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((category) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+          {categories.map((cat) => (
             <Link
-              key={category.id}
-              to={`/products?category=${category.id}`}
-              className="group block"
+              key={cat.id}
+              to={`/products?category=${cat.id}`}
+              className="card-hover group overflow-hidden"
             >
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-pink-200 transform hover:-translate-y-2">
-                {/* Category Image/Header */}
-                <div className="relative h-48 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-                  <div className="text-6xl">
-                    {category.icon || '🎂'}
-                  </div>
-                  
-                  {/* Product Count Badge */}
-                  <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-pink-600 shadow-md">
-                    {category.productCount} {category.productCount === 1 ? 'item' : 'items'}
-                  </div>
-                  
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              {/* Icon header */}
+              <div className="relative h-40 bg-gradient-to-br from-stone-50 to-stone-100 flex items-center justify-center">
+                <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
+                  {cat.icon || '🎂'}
+                </span>
+                <div className="absolute top-4 right-4">
+                  <span className="badge bg-white/80 backdrop-blur-sm text-stone-700 border border-stone-200/50">
+                    {cat.productCount} {cat.productCount === 1 ? 'item' : 'items'}
+                  </span>
                 </div>
-                
-                {/* Category Info */}
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold mb-2 text-gray-800 group-hover:text-pink-600 transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {category.description || `Browse our selection of ${category.name.toLowerCase()}.`}
-                  </p>
-                  
-                  {/* Action Button */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-pink-600 font-medium group-hover:text-pink-700 transition-colors">
-                      Shop Now →
-                    </span>
-                    <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center group-hover:bg-pink-200 transition-colors">
-                      <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
+              </div>
+              {/* Info */}
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-stone-900 mb-1 group-hover:text-brand-600 transition-colors">
+                  {cat.name}
+                </h3>
+                <p className="text-sm text-stone-500 line-clamp-2 mb-4">
+                  {cat.description || `Browse our selection of ${cat.name.toLowerCase()}.`}
+                </p>
+                <div className="flex items-center text-sm font-medium text-brand-600 group-hover:text-brand-700 transition-colors">
+                  Shop now
+                  <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
                 </div>
               </div>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-xl shadow-md">
-          <div className="text-6xl mb-4">📁</div>
-          <h3 className="text-2xl font-bold mb-2">No Categories Found</h3>
-          <p className="text-gray-600">There are currently no categories available.</p>
+        <div className="text-center py-20 card p-12">
+          <div className="w-16 h-16 bg-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-stone-900 mb-2">No categories yet</h3>
+          <p className="text-stone-500">Check back later for our product categories.</p>
         </div>
       )}
 
       {/* All Products Link */}
       <div className="mt-12 text-center">
-        <Link
-          to="/products"
-          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        <Link to="/products" className="btn-secondary">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6z" />
           </svg>
           Browse All Products
         </Link>

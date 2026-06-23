@@ -1,233 +1,270 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import guestCartService from '../services/guestCartService';
+
+const NAV_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/products', label: 'Products' },
+  { to: '/categories', label: 'Categories' },
+];
 
 export default function NavBar() {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const profileRef = useRef(null);
 
   useEffect(() => {
-    const updateCartCount = () => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const update = () => {
       if (isAuthenticated) {
-        // For authenticated users, use the user's cart count from API
         setCartCount(user?.cart_count || 0);
       } else {
-        // For guest users, get count from local storage
-        const guestCart = guestCartService.getCart();
-        setCartCount(guestCart.items?.length || 0);
+        const cart = guestCartService.getCart();
+        setCartCount(cart.items?.length || 0);
       }
     };
-
-    updateCartCount();
-    
-    // Listen for storage changes to update cart count in real-time
-    const handleStorageChange = () => {
-      updateCartCount();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('cartUpdated', handleStorageChange);
-    
+    update();
+    window.addEventListener('storage', update);
+    window.addEventListener('cartUpdated', update);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('cartUpdated', handleStorageChange);
+      window.removeEventListener('storage', update);
+      window.removeEventListener('cartUpdated', update);
     };
   }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setProfileOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <nav className="glass sticky top-0 z-50 backdrop-blur-xl bg-white/80">
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-stone-200/50' : 'bg-white border-b border-stone-100'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="text-4xl transform group-hover:scale-110 transition-transform duration-300">🎂</div>
-            <span className="text-2xl font-bold gradient-text">Sweet Dreams</span>
+          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+            <span className="text-xl font-bold text-stone-900 tracking-tight">Sweet Dreams</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 hover:scale-105">
-              Home
-            </Link>
-            <Link to="/products" className="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 hover:scale-105">
-              Products
-            </Link>
-            <Link to="/categories" className="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 hover:scale-105">
-              Categories
-            </Link>
-            {isAuthenticated ? (
-              <>
-                {/* Show cart only for customers, not for creators/admins */}
-                {!isAdmin() && user?.role !== 'seller' && (
-                  <Link to="/cart" className="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 hover:scale-105 relative">
-                    Cart
-                    {cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse">
-                        {cartCount}
-                      </span>
-                    )}
-                  </Link>
-                )}
-                
-                {/* Show orders for customers */}
-                {!isAdmin() && user?.role !== 'seller' && (
-                  <Link to="/orders" className="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 hover:scale-105">
-                    My Orders
-                  </Link>
-                )}
-                
-                {/* Show notifications for creators, admins, and any authenticated user */}
-                {(isAdmin() || user?.role === 'seller' || user?.role === 'creator' || isAuthenticated) && (
-                  <Link to="/creator/notifications" className="text-purple-700 hover:text-purple-800 font-semibold transition-all duration-300 hover:scale-105">
-                    Notifications
-                  </Link>
-                )}
-                
-                {/* Show creator links for sellers */}
-                {user?.role === 'seller' && (
-                  <>
-                    <Link to="/dashboard" className="text-green-700 hover:text-green-800 font-semibold transition-all duration-300 hover:scale-105">
-                      Dashboard
-                    </Link>
-                    <Link to="/my-products" className="text-green-700 hover:text-green-800 font-semibold transition-all duration-300 hover:scale-105">
-                      My Products
-                    </Link>
-                    <Link to="/add-product" className="text-green-700 hover:text-green-800 font-semibold transition-all duration-300 hover:scale-105">
-                      Add Product
-                    </Link>
-                    <Link to="/add-category" className="text-blue-700 hover:text-blue-800 font-semibold transition-all duration-300 hover:scale-105">
-                      Add Category
-                    </Link>
-                  </>
-                )}
-                {isAdmin() && (
-                  <>
-                    <Link to="/admin/dashboard" className="text-purple-700 hover:text-purple-800 font-semibold transition-all duration-300 hover:scale-105">
-                      Admin
-                    </Link>
-                    <Link to="/admin/product-approval" className="text-orange-700 hover:text-orange-800 font-semibold transition-all duration-300 hover:scale-105">
-                      Approvals
-                    </Link>
-                  </>
-                )}
-                <div className="flex items-center space-x-4 ml-4 pl-4 border-l-2 border-purple-200">
-                  <span className="text-gray-700 font-medium">Hi, {user?.name}</span>
-                  <button
-                    onClick={handleLogout}
-                    className="btn-secondary text-sm px-4 py-2"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/cart" className="text-gray-700 hover:text-purple-600 font-semibold transition-all duration-300 hover:scale-105 relative">
-                  Cart
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-                <Link to="/login" className="btn-primary text-sm px-6 py-2">
-                  Login
-                </Link>
-              </div>
-            )}
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(to)
+                    ? 'text-brand-700 bg-brand-50'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-gray-700 hover:text-purple-600 transition-colors p-2"
-          >
-            <svg className="h-8 w-8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-              {mobileMenuOpen ? (
-                <path d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" />
+          {/* Right Side */}
+          <div className="flex items-center gap-2">
+            {/* Cart */}
+            <Link
+              to="/cart"
+              className="relative p-2.5 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-brand-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
               )}
-            </svg>
-          </button>
-        </div>
+            </Link>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-6 space-y-4 bg-white/95 backdrop-blur-xl rounded-2xl mt-4 shadow-xl fade-in">
-            <Link to="/" className="block text-gray-700 hover:text-purple-600 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all">Home</Link>
-            <Link to="/products" className="block text-gray-700 hover:text-purple-600 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all">Products</Link>
-            <Link to="/categories" className="block text-gray-700 hover:text-purple-600 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all">Categories</Link>
             {isAuthenticated ? (
-              <>
-                {/* Show cart only for customers */}
-                {!isAdmin() && user?.role !== 'seller' && (
-                  <Link to="/cart" className="block text-gray-700 hover:text-purple-600 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all relative">
-                    Cart
-                    {cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-lg">
-                        {cartCount}
+              /* Profile Dropdown */
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex items-center gap-2 p-1.5 pr-3 rounded-xl hover:bg-stone-100 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-stone-700 max-w-[100px] truncate">
+                    {user?.name}
+                  </span>
+                  <svg className={`w-4 h-4 text-stone-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-lg border border-stone-200 py-2 animate-scale-in origin-top-right z-50">
+                    <div className="px-4 py-3 border-b border-stone-100">
+                      <p className="text-sm font-semibold text-stone-900">{user?.name}</p>
+                      <p className="text-xs text-stone-500 mt-0.5">{user?.email}</p>
+                      <span className="inline-block mt-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md">
+                        {user?.role}
                       </span>
-                    )}
-                  </Link>
+                    </div>
+
+                    <div className="py-1">
+                      {user?.role === 'seller' && (
+                        <>
+                          <DropdownLink to="/dashboard" icon="grid">Dashboard</DropdownLink>
+                          <DropdownLink to="/my-products" icon="box">My Products</DropdownLink>
+                          <DropdownLink to="/add-product" icon="plus">Add Product</DropdownLink>
+                          <DropdownLink to="/add-category" icon="tag">Add Category</DropdownLink>
+                          <div className="my-1 border-t border-stone-100" />
+                        </>
+                      )}
+                      {isAdmin() && (
+                        <>
+                          <DropdownLink to="/admin/dashboard" icon="chart">Admin Panel</DropdownLink>
+                          <DropdownLink to="/admin/product-approval" icon="check">Approvals</DropdownLink>
+                          <div className="my-1 border-t border-stone-100" />
+                        </>
+                      )}
+                      <DropdownLink to="/creator/notifications" icon="bell">Notifications</DropdownLink>
+                      <DropdownLink to="/orders" icon="receipt">Orders</DropdownLink>
+                    </div>
+
+                    <div className="pt-1 border-t border-stone-100">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                        </svg>
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
                 )}
-                
-                {/* Show orders for customers */}
-                {!isAdmin() && user?.role !== 'seller' && (
-                  <Link to="/orders" className="block text-gray-700 hover:text-purple-600 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all">My Orders</Link>
-                )}
-                
-                {/* Show notifications for creators, admins, and any authenticated user */}
-                {(isAdmin() || user?.role === 'seller' || user?.role === 'creator' || isAuthenticated) && (
-                  <Link to="/creator/notifications" className="block text-purple-700 hover:text-purple-800 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all">Notifications</Link>
-                )}
-                
-                {/* Show creator links for sellers */}
+              </div>
+            ) : (
+              <Link to="/login" className="btn-primary text-sm px-5 py-2">
+                Sign in
+              </Link>
+            )}
+
+            {/* Mobile Toggle */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2.5 rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                {mobileOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+                }
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Nav */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-stone-100 bg-white animate-slide-down">
+          <div className="px-4 py-3 space-y-1">
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  isActive(to)
+                    ? 'text-brand-700 bg-brand-50'
+                    : 'text-stone-700 hover:bg-stone-50'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+            {isAuthenticated && (
+              <>
+                <div className="my-2 border-t border-stone-100" />
                 {user?.role === 'seller' && (
                   <>
-                    <Link to="/dashboard" className="block text-green-700 hover:text-green-800 font-semibold py-2 px-4 rounded-lg hover:bg-green-50 transition-all">Dashboard</Link>
-                    <Link to="/my-products" className="block text-green-700 hover:text-green-800 font-semibold py-2 px-4 rounded-lg hover:bg-green-50 transition-all">My Products</Link>
-                    <Link to="/add-product" className="block text-green-700 hover:text-green-800 font-semibold py-2 px-4 rounded-lg hover:bg-green-50 transition-all">Add Product</Link>
-                    <Link to="/add-category" className="block text-blue-700 hover:text-blue-800 font-semibold py-2 px-4 rounded-lg hover:bg-blue-50 transition-all">Add Category</Link>
+                    <Link to="/dashboard" className="block px-4 py-2.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50">Dashboard</Link>
+                    <Link to="/my-products" className="block px-4 py-2.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50">My Products</Link>
                   </>
                 )}
                 {isAdmin() && (
-                  <>
-                    <Link to="/admin/dashboard" className="block text-purple-700 hover:text-purple-800 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all">Admin</Link>
-                    <Link to="/admin/categories" className="block text-indigo-700 hover:text-indigo-800 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 transition-all">Categories</Link>
-                  </>
+                  <Link to="/admin/dashboard" className="block px-4 py-2.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50">Admin Panel</Link>
                 )}
-                <div className="pt-4 border-t border-gray-200 mt-4">
-                  <p className="text-gray-700 mb-3 font-medium px-4">Hi, {user?.name}</p>
-                  <button onClick={handleLogout} className="btn-secondary w-full mx-4">
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <Link to="/cart" className="block text-gray-700 hover:text-purple-600 font-semibold py-2 px-4 rounded-lg hover:bg-purple-50 transition-all relative">
-                  Cart
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-lg">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-                <Link to="/login" className="btn-primary block mx-4 text-center">Login</Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                  Sign out
+                </button>
               </>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
+  );
+}
+
+function DropdownLink({ to, icon, children }) {
+  const icons = {
+    grid: <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />,
+    box: <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />,
+    plus: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />,
+    tag: <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />,
+    chart: <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />,
+    check: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    bell: <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />,
+    receipt: <path strokeLinecap="round" strokeLinejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />,
+  };
+
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+    >
+      <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        {icons[icon]}
+      </svg>
+      {children}
+    </Link>
   );
 }

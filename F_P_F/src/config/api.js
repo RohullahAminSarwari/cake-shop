@@ -44,66 +44,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Handle 401 Unauthorized
+    // Handle 401 Unauthorized - clear auth data but don't redirect
+    // Let AuthContext and ProtectedRoute handle navigation
     if (error.response?.status === 401) {
-      // Don't retry if we've already tried to refresh the token
-      if (originalRequest._retry) {
-        // Clear auth data and redirect to login
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('token_expiry');
-        
-        // Only redirect if not already on login page
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-      
-      // Try to refresh the token
-      try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (refreshToken) {
-          originalRequest._retry = true;
-          
-          const response = await axios.post(`${API_BASE_URL}/refresh-token`, {}, {
-            headers: {
-              'Authorization': `Bearer ${refreshToken}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            }
-          });
-          
-          if (response.data.success && response.data.data?.token) {
-            const newToken = response.data.data.token;
-            const newExpiry = response.data.data.expires_at;
-            
-            // Update stored tokens
-            localStorage.setItem('auth_token', newToken);
-            if (newExpiry) {
-              localStorage.setItem('token_expiry', newExpiry);
-            }
-            
-            // Update the authorization header for the original request
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            
-            // Retry the original request
-            return api(originalRequest);
-          }
-        }
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-      }
-      
-      // If refresh fails or no refresh token, clear auth and redirect
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       localStorage.removeItem('token_expiry');
-      
-      // Only redirect if not already on login page
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      localStorage.removeItem('login_time');
     }
     
     // Handle network errors

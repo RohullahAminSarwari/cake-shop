@@ -2,184 +2,164 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../config/api';
 
+const FEATURES = [
+  { icon: '🚚', title: 'Fast Delivery', desc: 'Fresh cakes delivered to your doorstep within hours' },
+  { icon: '✨', title: 'Premium Quality', desc: 'Made with the finest ingredients sourced locally' },
+  { icon: '🎨', title: 'Custom Designs', desc: 'Personalized cakes crafted for your occasion' },
+];
+
 export default function Home() {
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch featured products - you'll need to add this endpoint to your backend
-    // For now, using placeholder
-    fetchFeaturedProducts();
-    fetchCategories();
+    Promise.all([
+      api.get('/products').then(r => {
+        const d = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+        setProducts(d.slice(0, 8));
+      }).catch(() => {}),
+      api.get('/categories').then(r => {
+        const d = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+        setCategories(d.slice(0, 6));
+      }).catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
-  const fetchFeaturedProducts = async () => {
-    try {
-      // This will need a products endpoint in your backend
-      // const response = await api.get('/products?featured=true&limit=6');
-      // setFeaturedProducts(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/categories');
-      const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-      // Show only first 4 categories on home page
-      setCategories(categoriesData.slice(0, 4));
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative py-24 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-rose-500 opacity-90"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="fade-in">
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white leading-tight">
-                Sweet Dreams
-                <span className="block text-yellow-300">Made Real</span>
-              </h1>
-              <p className="text-xl mb-8 text-white/90 leading-relaxed">
-                Discover our handcrafted cakes, pastries, and desserts made with love and the finest ingredients.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/products" className="btn-primary bg-white text-purple-600 hover:bg-yellow-50 text-center shadow-xl">
-                  Shop Now
-                </Link>
-                <Link to="/categories" className="btn-secondary bg-purple-700 hover:bg-purple-800 text-white text-center border-2 border-white/30">
-                  Browse Categories
-                </Link>
-              </div>
+    <div>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-stone-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-900/20 to-warm-500/10" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-6">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-sm text-stone-300 font-medium">Fresh baked daily</span>
             </div>
-            <div className="hidden md:block fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="relative">
-                <div className="absolute inset-0 bg-white/20 rounded-3xl transform rotate-6 backdrop-blur-sm"></div>
-                <div className="relative glass p-8 shadow-2xl rounded-3xl">
-                  <div className="text-9xl text-center transform hover:scale-110 transition-transform duration-500">🎂</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="card text-center group hover:scale-105 transition-transform duration-300">
-              <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">🚚</div>
-              <h3 className="text-2xl font-bold mb-3 gradient-text">Fast Delivery</h3>
-              <p className="text-gray-600">Fresh cakes delivered to your doorstep</p>
-            </div>
-            <div className="card text-center group hover:scale-105 transition-transform duration-300">
-              <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">✨</div>
-              <h3 className="text-2xl font-bold mb-3 gradient-text">Premium Quality</h3>
-              <p className="text-gray-600">Made with finest ingredients and care</p>
-            </div>
-            <div className="card text-center group hover:scale-105 transition-transform duration-300">
-              <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">🎨</div>
-              <h3 className="text-2xl font-bold mb-3 gradient-text">Custom Designs</h3>
-              <p className="text-gray-600">Personalized cakes for special occasions</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Preview Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 fade-in">
-            <h2 className="text-5xl font-bold mb-4 gradient-text">Popular Categories</h2>
-            <p className="text-gray-600 text-xl">Explore our delicious collections</p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-            {categories.map((category, index) => (
-              <Link
-                key={category.id}
-                to={`/products?category=${category.id}`}
-                className="card p-6 text-center group hover:scale-105 transition-all duration-300 fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {category.icon || '🎂'}
-                </div>
-                <h3 className="font-bold text-xl mb-2 group-hover:text-purple-600 transition-colors">
-                  {category.name}
-                </h3>
-                <p className="text-gray-600">Delicious treats</p>
+            <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight leading-[1.1]">
+              Sweet Dreams
+              <span className="block text-brand-400">Made Real</span>
+            </h1>
+            <p className="mt-6 text-lg text-stone-400 leading-relaxed max-w-lg">
+              Discover our handcrafted cakes, pastries, and desserts — made with love and the finest ingredients for every occasion.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link to="/products" className="btn-primary bg-white text-stone-900 hover:bg-stone-100 px-8 py-4 text-base">
+                Shop Now
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
               </Link>
+              <Link to="/categories" className="btn-secondary border-stone-700 text-stone-300 hover:bg-stone-800 hover:text-white px-8 py-4 text-base">
+                Browse Categories
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-16 bg-white border-b border-stone-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-8 stagger-children">
+            {FEATURES.map(({ icon, title, desc }) => (
+              <div key={title} className="flex gap-4 p-6 rounded-2xl hover:bg-stone-50 transition-colors">
+                <div className="text-3xl shrink-0">{icon}</div>
+                <div>
+                  <h3 className="font-semibold text-stone-900 mb-1">{title}</h3>
+                  <p className="text-sm text-stone-500 leading-relaxed">{desc}</p>
+                </div>
+              </div>
             ))}
           </div>
-          
-          <div className="text-center fade-in">
-            <Link 
-              to="/categories" 
-              className="btn-primary inline-flex items-center shadow-xl hover:shadow-2xl"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              View All Categories
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Categories */}
+      {categories.length > 0 && (
+        <section className="py-20 bg-stone-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <h2 className="section-title">Shop by Category</h2>
+                <p className="section-subtitle">Find exactly what you're craving</p>
+              </div>
+              <Link to="/categories" className="hidden sm:flex btn-ghost text-sm text-brand-600 hover:text-brand-700">
+                View all
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 stagger-children">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/products?category=${cat.id}`}
+                  className="card-hover group p-6 text-center"
+                >
+                  <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">
+                    {cat.icon || '🎂'}
+                  </div>
+                  <h3 className="font-semibold text-sm text-stone-900 group-hover:text-brand-600 transition-colors">
+                    {cat.name}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Products */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 fade-in">
-            <h2 className="text-5xl font-bold mb-4 gradient-text">Featured Products</h2>
-            <p className="text-gray-600 text-xl">Handpicked favorites from our collection</p>
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="section-title">Featured Products</h2>
+              <p className="section-subtitle">Handpicked favorites from our collection</p>
+            </div>
+            <Link to="/products" className="hidden sm:flex btn-ghost text-sm text-brand-600 hover:text-brand-700">
+              View all
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className="spinner mx-auto"></div>
+            <div className="flex justify-center py-16">
+              <div className="w-8 h-8 border-2 border-stone-200 border-t-brand-600 rounded-full animate-spin" />
             </div>
-          ) : featuredProducts.length > 0 ? (
-            <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product, index) => (
-                <Link
-                  key={product.id}
-                  to={`/products/${product.id}`}
-                  className="card overflow-hidden group hover:scale-105 transition-all duration-300 fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="relative h-64 bg-gradient-to-br from-purple-100 to-pink-100 overflow-hidden">
+          ) : products.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
+              {products.map((product) => (
+                <Link key={product.id} to={`/products/${product.id}`} className="card-hover group overflow-hidden">
+                  <div className="aspect-square bg-stone-100 overflow-hidden">
                     {product.images?.[0] ? (
                       <img
                         src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-7xl">
+                      <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-stone-50 to-stone-100">
                         🎂
                       </div>
                     )}
                   </div>
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl mb-2 group-hover:text-purple-600 transition-colors">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-3xl font-bold gradient-text">
+                  <div className="p-5">
+                    <h3 className="font-semibold text-stone-900 mb-1 group-hover:text-brand-600 transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-stone-500 line-clamp-2 mb-3">{product.description}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-stone-900">
                         ${product.discount_price || product.price}
                       </span>
                       {product.discount_price && (
-                        <span className="text-gray-400 line-through text-lg">${product.price}</span>
+                        <span className="text-sm text-stone-400 line-through">${product.price}</span>
                       )}
                     </div>
                   </div>
@@ -187,28 +167,22 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 card">
-              <div className="text-6xl mb-4">🎂</div>
-              <p className="text-gray-500 text-lg">No products available yet. Check back soon!</p>
+            <div className="text-center py-16 card p-12">
+              <div className="text-5xl mb-4">🎂</div>
+              <p className="text-stone-500">No products available yet. Check back soon!</p>
             </div>
           )}
-
-          <div className="text-center mt-12 fade-in">
-            <Link to="/products" className="btn-primary shadow-xl hover:shadow-2xl">
-              View All Products
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-purple-600 via-pink-500 to-rose-500 text-white relative overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center fade-in">
-          <h2 className="text-5xl font-bold mb-6">Ready to Order?</h2>
-          <p className="text-2xl mb-10 text-white/90">
-            Create something sweet for your special day
+      {/* CTA */}
+      <section className="bg-stone-900 py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to order?</h2>
+          <p className="text-stone-400 text-lg mb-8 max-w-xl mx-auto">
+            Create something sweet for your special day. Browse our collection or design your own.
           </p>
-          <Link to="/products" className="btn-primary bg-white text-purple-600 hover:bg-yellow-50 shadow-xl hover:shadow-2xl">
+          <Link to="/products" className="btn-primary bg-white text-stone-900 hover:bg-stone-100 px-8 py-4 text-base">
             Start Shopping
           </Link>
         </div>

@@ -1,8 +1,18 @@
-public function run()
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
 {
-    $this->call([
-        RoleSeeder::class,
-        PermissionSeeder::class,
-        AdminUserSeeder::class,
-    ]);
+    public function run()
+    {
+        $this->call([
+            RoleSeeder::class,
+            PermissionSeeder::class,
+            UserSeeder::class,
+            CategorySeeder::class,
+        ]);
+    }
 }

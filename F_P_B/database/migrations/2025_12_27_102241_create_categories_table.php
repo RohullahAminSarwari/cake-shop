@@ -15,6 +15,10 @@ return new class extends Migration
     $table->id();
     $table->foreignId('parent_id')->nullable()->constrained('categories');
     $table->string('name');
+    $table->text('description')->nullable();
+    $table->string('icon')->nullable();
+    $table->enum('status', ['active', 'inactive'])->default('active');
+    $table->timestamps();
 });
 
     }

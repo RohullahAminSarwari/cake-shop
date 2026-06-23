@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,70 +15,45 @@ export default function ProductDetail() {
   const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
-    fetchProduct();
+    const fetch = async () => {
+      try {
+        setLoading(true);
+        const r = await api.get(`/products/${id}`);
+        setProduct(r.data?.data || r.data || null);
+      } catch {
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
   }, [id]);
 
-  const fetchProduct = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/products/${id}`);
-      console.log(response.data);
-      // Handle different response formats for single product
-      const productData = response.data?.data || response.data || null;
-      setProduct(productData);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      setLoading(false);
-    }
-  
-  };
-
-
   const addToCart = async () => {
-    if (!product) {
-      console.error('Product is null/undefined');
-      alert('Product not available');
-      return;
-    }
-
-    if (product.stock !== undefined && product.stock === 0) {
-      alert('Product is out of stock');
-      return;
-    }
-
-    if (quantity < 1) {
-      alert('Please select a valid quantity');
-      return;
-    }
+    if (!product) return;
+    if (product.stock !== undefined && product.stock === 0) return;
 
     try {
       setAddingToCart(true);
-      
       if (isAuthenticated) {
-        // Authenticated user - use API
         await api.post('/cart/add', { product_id: id, quantity });
       } else {
-        // Guest user - use local storage
         guestCartService.addItem(product, quantity);
-        // Dispatch event to update cart count in navigation
         window.dispatchEvent(new CustomEvent('cartUpdated'));
       }
-      
-      setAddingToCart(false);
-      alert('Product added to cart!');
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      alert('Failed to add product to cart: ' + (error.response?.data?.message || error.message));
+      alert('Added to cart!');
+    } catch (err) {
+      alert('Failed to add to cart: ' + (err.response?.data?.message || err.message));
+    } finally {
       setAddingToCart(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center fade-in">
-          <div className="spinner mx-auto"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="flex justify-center">
+          <div className="w-8 h-8 border-2 border-stone-200 border-t-brand-600 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -86,131 +61,164 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center card p-16 fade-in">
-          <div className="text-8xl mb-6">🔍</div>
-          <h2 className="text-3xl font-bold mb-4 gradient-text">Product not found</h2>
-          <button onClick={() => navigate('/products')} className="btn-primary shadow-xl hover:shadow-2xl">
-            Back to Products
-          </button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center card p-12 max-w-md mx-auto">
+          <div className="w-14 h-14 bg-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-stone-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-stone-900 mb-2">Product not found</h2>
+          <p className="text-sm text-stone-500 mb-6">This product may have been removed.</p>
+          <button onClick={() => navigate('/products')} className="btn-primary">Back to Products</button>
         </div>
       </div>
     );
   }
 
+  const images = product.images || [];
+  const hasDiscount = !!product.discount_price;
+  const discountPct = hasDiscount
+    ? Math.round(((product.price - product.discount_price) / product.price) * 100)
+    : 0;
+
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="grid md:grid-cols-2 gap-12">
-        {/* Product Images */}
-        <div className="fade-in">
-          <div className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl overflow-hidden mb-6 shadow-xl">
-            {product.images?.[selectedImage] ? (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-stone-500 mb-8">
+        <Link to="/products" className="hover:text-stone-900 transition-colors">Products</Link>
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+        <span className="text-stone-900 font-medium truncate">{product.name}</span>
+      </nav>
+
+      <div className="grid lg:grid-cols-2 gap-12">
+        {/* Images */}
+        <div>
+          <div className="aspect-square bg-stone-100 rounded-2xl overflow-hidden mb-4">
+            {images[selectedImage] ? (
               <img
-                src={typeof product.images[selectedImage] === 'string' ? product.images[selectedImage] : product.images[selectedImage]?.url}
+                src={typeof images[selectedImage] === 'string' ? images[selectedImage] : images[selectedImage]?.url}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-9xl">
+              <div className="w-full h-full flex items-center justify-center text-8xl bg-gradient-to-br from-stone-50 to-stone-100">
                 🎂
               </div>
             )}
           </div>
-          {product.images && product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-4">
-              {product.images.map((image, index) => (
+          {images.length > 1 && (
+            <div className="grid grid-cols-4 gap-3">
+              {images.map((img, i) => (
                 <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-xl overflow-hidden border-2 hover:scale-105 transition-all duration-300 ${
-                    selectedImage === index ? 'border-purple-500 shadow-lg' : 'border-purple-200'
+                  key={i}
+                  onClick={() => setSelectedImage(i)}
+                  className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedImage === i ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-stone-200 hover:border-stone-300'
                   }`}
                 >
-                  <img 
-                    src={typeof image === 'string' ? image : image?.url} 
-                    alt={`${product.name} ${index + 1}`} 
-                    className="w-full h-full object-cover" 
-                  />
+                  <img src={typeof img === 'string' ? img : img?.url} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Product Info */}
-        <div className="fade-in" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-5xl font-bold mb-4 gradient-text">{product.name}</h1>
-          <div className="flex items-center gap-4 mb-6">
-            <span className="text-4xl font-bold gradient-text">
-              ${product.discount_price || product.price}
-            </span>
-            {product.discount_price && (
+        {/* Info */}
+        <div>
+          {product.category && (
+            <Link
+              to={`/products?category=${product.category.id}`}
+              className="inline-block badge bg-brand-50 text-brand-700 mb-4 hover:bg-brand-100 transition-colors"
+            >
+              {product.category.name}
+            </Link>
+          )}
+
+          <h1 className="text-3xl font-bold text-stone-900 mb-4">{product.name}</h1>
+
+          {/* Price */}
+          <div className="flex items-baseline gap-3 mb-6">
+            <span className="text-3xl font-bold text-stone-900">${product.discount_price || product.price}</span>
+            {hasDiscount && (
               <>
-                <span className="text-2xl text-gray-400 line-through">${product.price}</span>
-                <span className="badge badge-danger">
-                  {Math.round(((product.price - product.discount_price) / product.price) * 100)}% OFF
-                </span>
+                <span className="text-lg text-stone-400 line-through">${product.price}</span>
+                <span className="badge bg-red-100 text-red-700">{discountPct}% off</span>
               </>
             )}
           </div>
 
+          {/* Description */}
           <div className="card p-6 mb-6">
-            <h3 className="text-lg font-bold mb-3 text-gray-700">Description</h3>
-            <p className="text-gray-600 leading-relaxed text-lg">{product.description}</p>
+            <h3 className="text-sm font-semibold text-stone-500 uppercase tracking-wider mb-2">Description</h3>
+            <p className="text-stone-700 leading-relaxed">{product.description}</p>
           </div>
 
+          {/* Stock */}
           {product.stock !== undefined && (
-            <div className="mb-6">
-              <span className={`font-bold text-lg ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
+            <div className="flex items-center gap-2 mb-6">
+              <span className={`w-2 h-2 rounded-full ${product.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className={`text-sm font-medium ${product.stock > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                {product.stock > 0 ? `In stock (${product.stock} available)` : 'Out of stock'}
               </span>
             </div>
           )}
 
-          <div className="card p-6 mb-6">
-            <label className="block font-bold mb-3 text-gray-700">Quantity</label>
-            <div className="flex items-center gap-4">
+          {/* Quantity */}
+          <div className="mb-8">
+            <label className="text-sm font-medium text-stone-700 mb-2 block">Quantity</label>
+            <div className="inline-flex items-center border border-stone-300 rounded-xl overflow-hidden">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-12 h-12 border-2 border-purple-200 rounded-xl hover:bg-purple-100 transition-colors text-xl font-bold"
+                className="w-11 h-11 flex items-center justify-center text-stone-600 hover:bg-stone-50 transition-colors"
               >
-                -
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                </svg>
               </button>
-              <span className="text-2xl font-bold w-16 text-center">{quantity}</span>
+              <span className="w-14 text-center font-semibold text-stone-900 border-x border-stone-300">{quantity}</span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-12 h-12 border-2 border-purple-200 rounded-xl hover:bg-purple-100 transition-colors text-xl font-bold"
+                className="w-11 h-11 flex items-center justify-center text-stone-600 hover:bg-stone-50 transition-colors"
               >
-                +
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
               </button>
             </div>
           </div>
 
-          <div className="flex gap-4">
+          {/* Actions */}
+          <div className="flex gap-3">
             <button
               onClick={addToCart}
               disabled={addingToCart || (product.stock !== undefined && product.stock === 0)}
-              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl text-lg"
+              className="btn-primary flex-1 py-4 text-base"
             >
-              {addingToCart ? 'Adding...' : 'Add to Cart'}
+              {addingToCart ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Adding...
+                </span>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                  Add to Cart
+                </>
+              )}
             </button>
-            <button 
-              className="btn-secondary shadow-md hover:shadow-lg"
-            >
-              ❤️ Wishlist
+            <button className="btn-secondary px-4">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
             </button>
           </div>
-
-          {product.category && (
-            <div className="mt-6 pt-6 border-t-2 border-purple-200">
-              <p className="text-sm text-gray-600">
-                Category: <span className="font-bold text-purple-600">{product.category.name}</span>
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
 }
-
