@@ -13,15 +13,12 @@ export default function Login() {
   const [attempts, setAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockTimeLeft, setLockTimeLeft] = useState(0);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Get redirect path from location state or default to home
   const from = location.state?.from?.pathname || '/';
 
-  // Check if user is locked out
   useEffect(() => {
     const lockUntil = localStorage.getItem('loginLockUntil');
     if (lockUntil) {
@@ -46,13 +43,9 @@ export default function Login() {
     }
   }, []);
 
-  // Auto-fill email if stored
   useEffect(() => {
-    const storedEmail = localStorage.getItem('rememberedEmail');
-    if (storedEmail) {
-      setEmail(storedEmail);
-      setRemember(true);
-    }
+    const stored = localStorage.getItem('rememberedEmail');
+    if (stored) { setEmail(stored); setRemember(true); }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -60,145 +53,90 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    // Check if locked out
-    if (isLocked) {
-      setError('Account temporarily locked. Please try again later.');
-      setLoading(false);
-      return;
-    }
+    if (isLocked) { setError('Account temporarily locked.'); setLoading(false); return; }
+    if (!AuthService.validateEmail(email)) { setError('Please enter a valid email'); setLoading(false); return; }
+    if (!password) { setError('Please enter your password'); setLoading(false); return; }
 
-    // Validate form
-    if (!AuthService.validateEmail(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
-      return;
-    }
+    const result = await login({ email, password, remember });
 
-    if (password.length < 1) {
-      setError('Please enter your password');
-      setLoading(false);
-      return;
-    }
-
-    const result = await login({ 
-      email, 
-      password, 
-      remember 
-    });
-    
     if (result.success) {
-      // Reset attempts on successful login
       setAttempts(0);
       localStorage.removeItem('loginAttempts');
-      
-      // Store email if remember is checked
-      if (remember) {
-        localStorage.setItem('rememberedEmail', email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
-      }
-      
+      if (remember) localStorage.setItem('rememberedEmail', email);
+      else localStorage.removeItem('rememberedEmail');
       navigate(from, { replace: true });
     } else {
-      // Handle failed login
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      localStorage.setItem('loginAttempts', newAttempts.toString());
-      
-      // Lock account after 5 failed attempts
-      if (newAttempts >= 5) {
-        const lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+      const n = attempts + 1;
+      setAttempts(n);
+      if (n >= 5) {
+        const lockUntil = new Date(Date.now() + 15 * 60 * 1000);
         localStorage.setItem('loginLockUntil', lockUntil.toISOString());
         setIsLocked(true);
-        setError('Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.');
+        setError('Too many attempts. Try again in 15 minutes.');
       } else {
-        // Show specific error message
-        let errorMessage = result.error || 'Login failed';
-        
         if (result.error_code === 'INVALID_CREDENTIALS') {
-          const remainingAttempts = 5 - newAttempts;
-          errorMessage = `Invalid email or password. ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`;
-        } else if (result.error_code === 'ACCOUNT_BANNED') {
-          errorMessage = 'Your account has been banned. Please contact support.';
-        } else if (result.errors) {
-          // Show validation errors
-          const firstError = Object.values(result.errors)[0];
-          errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+          setError(`Invalid email or password. ${5 - n} attempt${5 - n > 1 ? 's' : ''} remaining.`);
+        } else {
+          setError(result.error || 'Login failed');
         }
-        
-        setError(errorMessage);
       }
     }
-    
     setLoading(false);
   };
 
-  const handleForgotPassword = () => {
-    // For now, just show an alert. In a real app, this would navigate to a forgot password page
-    alert('Password reset functionality coming soon! Please contact support for password reset.');
-  };
-
-  const formatLockTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  };
+  const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-pink-50 to-rose-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 fade-in">
-        <div className="text-center">
-          <div className="text-7xl mb-6 transform hover:scale-110 transition-transform duration-300">🎂</div>
-          <h2 className="text-5xl font-bold gradient-text mb-3">Welcome Back</h2>
-          <p className="text-gray-600 text-xl">Sign in to your account</p>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-[400px]">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-stone-900">Welcome back</h1>
+          <p className="text-sm text-stone-500 mt-1">Sign in to your account to continue</p>
         </div>
 
-        <div className="card p-10 shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Form */}
+        <div className="card p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl">
-                {error}
+              <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
             {isLocked && (
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 text-yellow-700 px-4 py-3 rounded-xl">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span>Account locked. Try again in {formatLockTime(lockTimeLeft)}</span>
-                </div>
+              <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-amber-700">Locked. Try again in {formatTime(lockTimeLeft)}</p>
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-bold text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  disabled={isLocked}
-                  className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
-                />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                  </svg>
-                </div>
-              </div>
+              <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-1.5">Email</label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                disabled={isLocked}
+                className="input-field"
+              />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-bold text-gray-700 mb-2">
-                Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-medium text-stone-700 mb-1.5">Password</label>
               <div className="relative">
                 <input
                   id="password"
@@ -206,110 +144,67 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   disabled={isLocked}
-                  className="w-full px-4 py-3 pl-12 pr-12 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                  className="input-field pr-11"
                 />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLocked}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-600 transition-colors"
+                  tabIndex={-1}
                 >
-                  <svg className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {showPassword ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    )}
-                  </svg>
+                  {showPassword ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
-                  id="remember"
                   type="checkbox"
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
-                  className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                   disabled={isLocked}
+                  className="w-4 h-4 rounded border-stone-300 text-brand-600 focus:ring-brand-500"
                 />
-                <label htmlFor="remember" className="ml-2 block text-sm text-gray-700 font-medium">
-                  Remember me
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                className="text-sm text-purple-600 hover:text-purple-700 font-semibold disabled:opacity-50 transition-colors"
-                disabled={isLocked}
-              >
-                Forgot password?
-              </button>
+                <span className="text-sm text-stone-600">Remember me</span>
+              </label>
             </div>
 
             <button
               type="submit"
               disabled={loading || isLocked}
-              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl text-lg"
+              className="btn-primary w-full py-3"
             >
               {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Signing in...
                 </span>
-              ) : (
-                'Sign In'
-              )}
+              ) : 'Sign in'}
             </button>
           </form>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t-2 border-purple-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">New to our platform?</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                to="/register"
-                className="btn-secondary w-full flex justify-center py-3 px-4 text-lg shadow-md hover:shadow-lg transition-all"
-              >
-                Create an account
+          <div className="mt-6 pt-6 border-t border-stone-100 text-center">
+            <p className="text-sm text-stone-500">
+              Don't have an account?{' '}
+              <Link to="/register" className="font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+                Create one
               </Link>
-            </div>
+            </p>
           </div>
-        </div>
-
-        <div className="text-center text-sm text-gray-500">
-          <p className="font-medium">Secure login with encrypted connection</p>
-          <p className="mt-2">
-            Having trouble?{' '}
-            <button 
-              onClick={handleForgotPassword}
-              className="text-purple-600 hover:text-purple-700 font-semibold transition-colors"
-            >
-              Contact support
-            </button>
-          </p>
         </div>
       </div>
     </div>
   );
 }
-
