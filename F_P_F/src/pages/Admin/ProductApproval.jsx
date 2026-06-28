@@ -62,20 +62,17 @@ export default function ProductApproval() {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center py-12 fade-in">
-          <div className="spinner mx-auto"></div>
-          <p className="mt-4 text-gray-600 text-xl">Loading pending products...</p>
-        </div>
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-cream-300 border-t-terra-600 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="mb-12 fade-in">
-        <h1 className="text-5xl font-bold mb-3 gradient-text">Product Approval</h1>
-        <p className="text-gray-600 text-xl">Review and approve products submitted by users</p>
+    <div>
+      <div className="mb-8">
+        <h1 className="font-display text-3xl text-bark-950">Product Approval</h1>
+        <p className="text-bark-500 text-sm mt-1">Review and approve products submitted by users</p>
       </div>
 
       {pendingProducts.length === 0 ? (

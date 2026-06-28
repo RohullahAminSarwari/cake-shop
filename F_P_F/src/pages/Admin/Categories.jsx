@@ -101,11 +101,11 @@ export default function AdminCategories() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Categories</h1>
-          <p className="text-gray-600">Manage product categories</p>
+          <h1 className="font-display text-3xl text-bark-950">Categories</h1>
+          <p className="text-bark-500 text-sm mt-1">Manage product categories</p>
         </div>
         <button
           onClick={() => {

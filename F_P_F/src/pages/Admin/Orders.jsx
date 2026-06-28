@@ -245,11 +245,11 @@ export default function AdminOrders() {
     : orders.filter(order => order.status?.toLowerCase() === statusFilter.toLowerCase());
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Orders</h1>
-          <p className="text-gray-600">Manage and track customer orders</p>
+          <h1 className="font-display text-3xl text-bark-950">Orders</h1>
+          <p className="text-bark-500 text-sm mt-1">Manage and track customer orders</p>
         </div>
         <div className="flex gap-4">
           <button

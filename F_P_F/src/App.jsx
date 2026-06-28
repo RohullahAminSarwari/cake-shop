@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import AdminLayout from './components/AdminLayout';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import Categories from './pages/Categories';
@@ -25,6 +26,14 @@ import UserDashboard from './pages/User/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
+function AdminRoute({ children }) {
+  return (
+    <ProtectedRoute adminOnly>
+      <AdminLayout>{children}</AdminLayout>
+    </ProtectedRoute>
+  );
+}
+
 function App() {
   return (
     <Layout>
@@ -35,127 +44,29 @@ function App() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/login" element={<Login />} />
-        
-        {/* Public Cart Routes - accessible to both guests and authenticated users */}
+
+        {/* Public Cart Routes */}
         <Route path="/cart" element={<Cart />} />
         <Route path="/guest-checkout" element={<GuestCheckout />} />
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
         {/* Protected Customer Routes */}
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <Checkout />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/orders"
-          element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/creator/notifications"
-          element={
-            <ProtectedRoute>
-              <CreatorNotifications />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/add-product"
-          element={
-            <ProtectedRoute>
-              <AddProduct />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/add-category"
-          element={
-            <ProtectedRoute>
-              <AddCategory />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/my-products"
-          element={
-            <ProtectedRoute>
-              <MyProducts />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/edit-product/:id"
-          element={
-            <ProtectedRoute>
-              <EditProduct />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <UserDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+        <Route path="/creator/notifications" element={<ProtectedRoute><CreatorNotifications /></ProtectedRoute>} />
+        <Route path="/add-product" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
+        <Route path="/add-category" element={<ProtectedRoute><AddCategory /></ProtectedRoute>} />
+        <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
+        <Route path="/edit-product/:id" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/products"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminProducts />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/categories"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminCategories />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/orders"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminOrders />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminUsers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/product-approval"
-          element={
-            <ProtectedRoute adminOnly>
-              <ProductApproval />
-            </ProtectedRoute>
-          }
-        />
+        {/* Admin Routes — all wrapped with AdminLayout sidebar */}
+        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
+        <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+        <Route path="/admin/product-approval" element={<AdminRoute><ProductApproval /></AdminRoute>} />
       </Routes>
     </Layout>
   );
