@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -337,5 +340,136 @@ class AuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Send password reset link
+     */
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No account found with that email address.',
+            ], 404);
+        }
+
+        $existing = DB::table('password_reset_tokens')->where('email', $request->email)->first();
+        if ($existing && now()->diffInSeconds($existing->created_at) < 60) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please wait before requesting another reset link.',
+            ], 429);
+        }
+
+        $token = Str::random(64);
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            ['token' => Hash::make($token), 'created_at' => now()]
+        );
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        $resetUrl = $frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($request->email);
+
+        try {
+            Mail::send([], [], function ($message) use ($user, $resetUrl) {
+                $message->to($user->email, $user->name)
+                    ->subject('Reset Your Password - The Modern Patisserie')
+                    ->html(
+                        '<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">' .
+                        '<h2 style="color:#7f3526;margin-bottom:8px;">Reset Your Password</h2>' .
+                        '<p style="color:#574138;font-size:14px;line-height:1.6;">Hi ' . e($user->name) . ',</p>' .
+                        '<p style="color:#574138;font-size:14px;line-height:1.6;">We received a request to reset your password. Click the button below to choose a new one:</p>' .
+                        '<a href="' . $resetUrl . '" style="display:inline-block;background:#9a3d2b;color:#fff;text-decoration:none;padding:12px 32px;border-radius:12px;font-weight:600;font-size:14px;margin:20px 0;">Reset Password</a>' .
+                        '<p style="color:#a98367;font-size:12px;margin-top:24px;">This link expires in 60 minutes. If you didn\'t request this, you can safely ignore this email.</p>' .
+                        '</div>'
+                    );
+            });
+        } catch (\Exception $e) {
+            // Log the error but still return success so we don't leak info
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'If an account exists with that email, a password reset link has been sent.',
+        ]);
+    }
+
+    /**
+     * Reset password with token
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $record = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired reset link.',
+            ], 400);
+        }
+
+        if (now()->diffInMinutes($record->created_at) > 60) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'This reset link has expired. Please request a new one.',
+            ], 400);
+        }
+
+        if (!Hash::check($request->token, $record->token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired reset link.',
+            ], 400);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No account found.',
+            ], 404);
+        }
+
+        $user->update(['password' => Hash::make($request->password)]);
+        $user->tokens()->delete();
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password has been reset successfully. You can now sign in.',
+        ]);
     }
 }

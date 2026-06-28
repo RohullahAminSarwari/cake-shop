@@ -34,6 +34,8 @@ Route::post('/guest-orders', [GuestOrderController::class, 'store']);
 // Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Protected Routes (Customer)
 Route::middleware('auth:sanctum')->group(function () {

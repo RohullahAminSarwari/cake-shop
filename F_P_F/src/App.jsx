@@ -6,6 +6,8 @@ import Products from './pages/Products';
 import Categories from './pages/Categories';
 import ProductDetail from './pages/ProductDetail';
 import Login from './pages/Auth/Login';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import GuestCheckout from './pages/GuestCheckout';
@@ -44,6 +46,8 @@ function App() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Public Cart Routes */}
         <Route path="/cart" element={<Cart />} />

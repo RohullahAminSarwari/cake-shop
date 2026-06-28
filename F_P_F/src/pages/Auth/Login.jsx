@@ -156,12 +156,17 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Remember */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={isLocked}
-                  className="w-4 h-4 rounded border-cream-400 text-terra-700 focus:ring-terra-500" />
-                <span className="text-sm text-bark-600">Remember me for 30 days</span>
-              </label>
+              {/* Remember + Forgot */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={isLocked}
+                    className="w-4 h-4 rounded border-cream-400 text-terra-700 focus:ring-terra-500" />
+                  <span className="text-sm text-bark-600">Remember me</span>
+                </label>
+                <Link to="/forgot-password" className="text-sm font-medium text-terra-700 hover:text-terra-800 transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
 
               <button type="submit" disabled={loading || isLocked} className="btn-primary w-full py-3.5 text-base">
                 {loading ? (
